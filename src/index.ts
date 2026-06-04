@@ -25,6 +25,11 @@ app.use('/api/newsletter', rateLimiter, newsletterRouter);
 const PORT = Number(process.env.PORT) || 8080;
 
 const startServer = async () => {
+  console.log('--- STARTUP DIAGNOSTICS ---');
+  console.log(`PORT Variable: ${process.env.PORT ? 'Set (' + process.env.PORT + ')' : 'MISSING'}`);
+  console.log(`MONGODB_URI Variable: ${process.env.MONGODB_URI ? 'SET' : 'MISSING'}`);
+  console.log('---------------------------');
+  
   await connectToDatabase();
   
   app.listen(PORT, '0.0.0.0', () => {
