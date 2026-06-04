@@ -22,12 +22,12 @@ app.set('trust proxy', 1);
 app.use('/api/newsletter', rateLimiter, newsletterRouter);
 
 // Initialize and start server
-const PORT = process.env.PORT || 8080;
+const PORT = Number(process.env.PORT) || 8080;
 
 const startServer = async () => {
   await connectToDatabase();
   
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
   });
 };
