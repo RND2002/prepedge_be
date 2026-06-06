@@ -9,7 +9,7 @@ const setRefreshCookie = (res: Response, refreshToken: string) => {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    path: '/api/auth',
+    path: '/api/auth', //test
   });
 
 
