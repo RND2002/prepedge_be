@@ -11,6 +11,7 @@ const setRefreshCookie = (res: Response, refreshToken: string) => {
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     path: '/api/auth',
   });
+
 };
 
 const clearRefreshCookie = (res: Response) => {
@@ -49,7 +50,7 @@ export const verifyOTP = async (req: Request, res: Response) => {
     const userAgent = req.headers['user-agent'];
 
     const result = await authService.verifyOTP(email, otp, ipAddress, userAgent);
-    
+
     setRefreshCookie(res, result.refreshToken);
     return res.status(200).json({ accessToken: result.accessToken, refreshToken: result.refreshToken, user: result.user });
   } catch (error: any) {
