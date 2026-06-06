@@ -9,7 +9,7 @@ const OnboardingSchema: Schema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
     displayName: { type: String, trim: true },
-    track: { type: String, enum: ['COLLEGE_FRESHER', 'MERN_EXPERIENCED', 'MERN_FRESHER', 'MEAN_EXPERIENCED', 'PYTHON', 'GOLANG'] },
+    track: { type: String, enum: ['COLLEGE_FRESHER', 'MERN_EXPERIENCED', 'MERN_FRESHER', 'MEAN_EXPERIENCED', 'PYTHON', 'GOLANG', 'JAVA'] },
     experienceLevel: { type: String, enum: ['fresher', 'junior', 'mid', 'senior'] },
     experienceYears: { type: Number, min: 0, max: 20 },
     targetRole: { type: String, enum: ['frontend', 'backend', 'fullstack', 'sde1', 'sde2'] },
