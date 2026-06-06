@@ -12,6 +12,7 @@ const setRefreshCookie = (res: Response, refreshToken: string) => {
     path: '/api/auth',
   });
 
+
 };
 
 const clearRefreshCookie = (res: Response) => {
