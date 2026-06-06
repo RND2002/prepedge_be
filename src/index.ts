@@ -17,7 +17,7 @@ const app = express();
 
 // Security Middleware
 app.use(helmet());
-app.use(cors({ origin: process.env.FRONTEND_URL }));
+app.use(cors({ origin: [process.env.FRONTEND_URL as string, 'https://release-prepedge.netlify.app'] }));
 
 // Body parser with 10kb limit
 app.use(express.json({ limit: '10kb' }));
@@ -42,11 +42,11 @@ const startServer = async () => {
   console.log(`PORT Variable: ${process.env.PORT ? 'Set (' + process.env.PORT + ')' : 'MISSING'}`);
   console.log(`MONGODB_URI Variable: ${process.env.MONGODB_URI ? 'SET' : 'MISSING'}`);
   console.log('---------------------------');
-  
+
   await connectToDatabase();
-  
+
   startStaleSessionCronJob();
-  
+
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
   });
