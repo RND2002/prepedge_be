@@ -1,0 +1,68 @@
+2026-06-05T21:48:47.452Z AI_APICallError: No endpoints found for anthropic/claude-3.5-sonnet.
+    at C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\@openrouter+ai-sdk-provider_366dec8480711fa9b0584c242a905379\node_modules\@openrouter\ai-sdk-provider\node_modules\.pnpm\@ai-sdk+provider-utils@4.0.23_zod@4.3.5\node_modules\@ai-sdk\provider-utils\src\response-handler.ts:56:16
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async postToApi (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\@openrouter+ai-sdk-provider_366dec8480711fa9b0584c242a905379\node_modules\@openrouter\ai-sdk-provider\node_modules\.pnpm\@ai-sdk+provider-utils@4.0.23_zod@4.3.5\node_modules\@ai-sdk\provider-utils\src\post-to-api.ts:118:28)
+    at async OpenRouterChatLanguageModel.doGenerate (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\@openrouter+ai-sdk-provider_366dec8480711fa9b0584c242a905379\node_modules\@openrouter\ai-sdk-provider\src\chat\index.ts:253:55)
+    at async fn (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\generate-object\generate-object.ts:338:30)
+    at async C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\telemetry\record-span.ts:32:24
+    at async _retryWithExponentialBackoff (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\util\retry-with-exponential-backoff.ts:101:12)
+    at async fn (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\generate-object\generate-object.ts:309:32)
+    at async C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\telemetry\record-span.ts:32:24
+    at async generateObject (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\generate-object\generate-object.ts:262:12)
+2026-06-05T21:53:35.469Z AI_RetryError: Failed after 3 attempts. Last error: [Venice] meta-llama/llama-3.3-70b-instruct:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations
+    at _retryWithExponentialBackoff (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\util\retry-with-exponential-backoff.ts:116:13)
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async fn (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\generate-object\generate-object.ts:309:32)
+    at async C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\telemetry\record-span.ts:32:24
+    at async generateObject (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\generate-object\generate-object.ts:262:12)
+    at async generateQuestionsWithAI (C:\Users\aryan\Desktop\lumio_be\src\lib\ai\evaluator.ts:12:22)
+    at async Object.startInterview (C:\Users\aryan\Desktop\lumio_be\src\interview\interview.service.ts:37:22)
+    at async startInterview (C:\Users\aryan\Desktop\lumio_be\src\interview\interview.controller.ts:16:21)
+2026-06-05T21:55:12.094Z AI_APICallError: This request requires more credits, or fewer max_tokens. You requested up to 65535 tokens, but can only afford 16000. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account
+    at C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\@openrouter+ai-sdk-provider_366dec8480711fa9b0584c242a905379\node_modules\@openrouter\ai-sdk-provider\node_modules\.pnpm\@ai-sdk+provider-utils@4.0.23_zod@4.3.5\node_modules\@ai-sdk\provider-utils\src\response-handler.ts:56:16
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async postToApi (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\@openrouter+ai-sdk-provider_366dec8480711fa9b0584c242a905379\node_modules\@openrouter\ai-sdk-provider\node_modules\.pnpm\@ai-sdk+provider-utils@4.0.23_zod@4.3.5\node_modules\@ai-sdk\provider-utils\src\post-to-api.ts:118:28)
+    at async OpenRouterChatLanguageModel.doGenerate (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\@openrouter+ai-sdk-provider_366dec8480711fa9b0584c242a905379\node_modules\@openrouter\ai-sdk-provider\src\chat\index.ts:253:55)
+    at async fn (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\generate-object\generate-object.ts:338:30)
+    at async C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\telemetry\record-span.ts:32:24
+    at async _retryWithExponentialBackoff (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\util\retry-with-exponential-backoff.ts:101:12)
+    at async fn (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\generate-object\generate-object.ts:309:32)
+    at async C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\telemetry\record-span.ts:32:24
+    at async generateObject (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\generate-object\generate-object.ts:262:12)
+2026-06-06T06:21:57.948Z AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.5-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.5-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.5-pro
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.5-pro
+Please retry in 1.94580142s.
+    at _retryWithExponentialBackoff (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\util\retry-with-exponential-backoff.ts:116:13)
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async fn (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\generate-object\generate-object.ts:309:32)
+    at async C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\telemetry\record-span.ts:32:24
+    at async generateObject (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\generate-object\generate-object.ts:262:12)
+    at async generateQuestionsWithAI (C:\Users\aryan\Desktop\lumio_be\src\lib\ai\evaluator.ts:17:22)
+    at async Object.startInterview (C:\Users\aryan\Desktop\lumio_be\src\interview\interview.service.ts:37:22)
+    at async startInterview (C:\Users\aryan\Desktop\lumio_be\src\interview\interview.controller.ts:16:21)
+2026-06-06T06:33:23.241Z ValidationError: InterviewSession validation failed: config.targetRole: Path `config.targetRole` is required., config.experienceLevel: Path `config.experienceLevel` is required., config.stack: Path `config.stack` is required.
+    at model.validate (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\mongoose@9.6.3\node_modules\mongoose\lib\document.js:2864:36)
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.$__save (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\mongoose@9.6.3\node_modules\mongoose\lib\model.js:393:7)
+    at async model.save (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\mongoose@9.6.3\node_modules\mongoose\lib\model.js:667:5)
+    at async model.create (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\mongoose@9.6.3\node_modules\mongoose\lib\model.js:2747:5)
+    at async Object.startInterview (C:\Users\aryan\Desktop\lumio_be\src\interview\interview.service.ts:76:19)
+    at async startInterview (C:\Users\aryan\Desktop\lumio_be\src\interview\interview.controller.ts:16:21)
+2026-06-06T06:36:42.353Z AI_APICallError: models/gemini-1.5-pro is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.
+    at C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\@ai-sdk+provider-utils@4.0.27_zod@4.4.3\node_modules\@ai-sdk\provider-utils\src\response-handler.ts:56:16
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async postToApi (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\@ai-sdk+provider-utils@4.0.27_zod@4.4.3\node_modules\@ai-sdk\provider-utils\src\post-to-api.ts:118:28)
+    at async GoogleGenerativeAILanguageModel.doGenerate (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\@ai-sdk+google@3.0.80_zod@4.4.3\node_modules\@ai-sdk\google\src\google-generative-ai-language-model.ts:314:9)
+    at async fn (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\generate-object\generate-object.ts:338:30)
+    at async C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\telemetry\record-span.ts:32:24
+    at async _retryWithExponentialBackoff (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\util\retry-with-exponential-backoff.ts:101:12)
+    at async fn (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\generate-object\generate-object.ts:309:32)
+    at async C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\telemetry\record-span.ts:32:24
+    at async generateObject (C:\Users\aryan\Desktop\lumio_be\node_modules\.pnpm\ai@6.0.197_zod@4.4.3\node_modules\ai\src\generate-object\generate-object.ts:262:12)
+2026-06-06T11:35:27.704Z Error: Incomplete onboarding profile. Please complete onboarding first.
+    at Object.startInterview (C:\Users\aryan\Desktop\lumio_be\src\interview\interview.service.ts:49:11)
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async startInterview (C:\Users\aryan\Desktop\lumio_be\src\interview\interview.controller.ts:16:21)

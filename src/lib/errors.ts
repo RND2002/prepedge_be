@@ -3,6 +3,15 @@ export const ErrorCodes = {
   INTERNAL_ERROR: 'INTERNAL_ERROR',
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
+  EMAIL_EXISTS: 'EMAIL_EXISTS',
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  INVALID_TOKEN: 'INVALID_TOKEN',
+  TOKEN_EXPIRED: 'TOKEN_EXPIRED',
+  REUSE_DETECTED: 'REUSE_DETECTED',
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+  INVALID_OR_EXPIRED_TOKEN: 'INVALID_OR_EXPIRED_TOKEN',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
 } as const;
 
 export const ErrorMessages = {
@@ -10,4 +19,13 @@ export const ErrorMessages = {
   [ErrorCodes.INTERNAL_ERROR]: 'Internal server error',
   [ErrorCodes.RATE_LIMIT_EXCEEDED]: 'Too many requests. Please try again later.',
   [ErrorCodes.VALIDATION_ERROR]: 'Invalid input provided.',
+  [ErrorCodes.EMAIL_EXISTS]: 'Email already exists',
+  [ErrorCodes.INVALID_CREDENTIALS]: 'Invalid credentials',
+  [ErrorCodes.INVALID_TOKEN]: 'Invalid token',
+  [ErrorCodes.TOKEN_EXPIRED]: 'Token has expired',
+  [ErrorCodes.REUSE_DETECTED]: 'Token reuse detected. All sessions revoked.',
+  [ErrorCodes.USER_NOT_FOUND]: 'User not found',
+  [ErrorCodes.INVALID_OR_EXPIRED_TOKEN]: 'Invalid or expired token',
+  [ErrorCodes.UNAUTHORIZED]: 'Unauthorized access',
+  [ErrorCodes.FORBIDDEN]: 'Forbidden access',
 } as const;
