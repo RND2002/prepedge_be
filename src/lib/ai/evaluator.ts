@@ -1,6 +1,7 @@
 import { generateObject } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createAnthropic } from '@ai-sdk/anthropic';
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -10,13 +11,17 @@ const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
+const anthropic = createAnthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
 import { EvaluationResponseSchema, EvaluationResponse, QuestionGenerationSchema } from './schemas';
 import { buildSystemPrompt, buildUserMessage, buildQuestionGenerationSystemPrompt, AIQuestionGenConfig, AIEvaluationSessionConfig, AIBehaviorSummary } from './prompts';
 
 export const generateQuestionsWithAI = async (config: AIQuestionGenConfig, weakAreas: string[]) => {
   const { object } = await generateObject({
-    model: google('gemini-2.5-pro'),
-    // model: anthropic('claude-3-5-sonnet-20240620'),
+    // model: google('gemini-2.5-pro'),
+    model: anthropic('claude-sonnet-4-6'),
     schema: QuestionGenerationSchema,
     system: buildQuestionGenerationSystemPrompt(config, weakAreas),
     prompt: "Generate the interview questions now.",
@@ -35,8 +40,8 @@ export const evaluateSessionWithAI = async (
   const prompt = buildUserMessage(answers);
 
   const { object } = await generateObject({
-    model: google('gemini-2.5-pro'),
-    // model: anthropic('claude-3-5-sonnet-20240620'),
+    // model: google('gemini-2.5-pro'),
+    model: anthropic('claude-sonnet-4-6'),
     schema: EvaluationResponseSchema,
     system,
     prompt,
