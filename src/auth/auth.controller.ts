@@ -55,6 +55,9 @@ export const verifyOTP = async (req: Request, res: Response) => {
     setRefreshCookie(res, result.refreshToken);
     return res.status(200).json({ accessToken: result.accessToken, refreshToken: result.refreshToken, user: result.user });
   } catch (error: any) {
+    if (error.message === 'USER_SUSPENDED') {
+      return res.status(403).json({ message: 'Your account has been suspended by an administrator' });
+    }
     if (error.message === ErrorCodes.USER_NOT_FOUND) {
       return res.status(404).json({ message: ErrorMessages[ErrorCodes.USER_NOT_FOUND] });
     }
@@ -83,6 +86,9 @@ export const login = async (req: Request, res: Response) => {
     setRefreshCookie(res, refreshToken);
     res.json({ accessToken, refreshToken, user });
   } catch (error) {
+    if (error instanceof Error && error.message === 'USER_SUSPENDED') {
+      return res.status(403).json({ message: 'Your account has been suspended by an administrator' });
+    }
     if (error instanceof Error && error.message === ErrorCodes.INVALID_CREDENTIALS) {
       return res.status(401).json({ message: ErrorMessages[ErrorCodes.INVALID_CREDENTIALS] });
     }
@@ -104,6 +110,9 @@ export const googleAuth = async (req: Request, res: Response) => {
     setRefreshCookie(res, refreshToken);
     res.json({ accessToken, refreshToken, user });
   } catch (error) {
+    if (error instanceof Error && error.message === 'USER_SUSPENDED') {
+      return res.status(403).json({ message: 'Your account has been suspended by an administrator' });
+    }
     if (error instanceof Error && error.message === ErrorCodes.INVALID_TOKEN) {
       return res.status(401).json({ message: ErrorMessages[ErrorCodes.INVALID_TOKEN] });
     }
@@ -128,6 +137,9 @@ export const refresh = async (req: Request, res: Response) => {
   } catch (error) {
     clearRefreshCookie(res);
     if (error instanceof Error) {
+      if (error.message === 'USER_SUSPENDED') {
+        return res.status(403).json({ message: 'Your account has been suspended by an administrator' });
+      }
       if (error.message === ErrorCodes.INVALID_TOKEN || error.message === ErrorCodes.TOKEN_EXPIRED) {
         return res.status(401).json({ message: ErrorMessages[ErrorCodes.INVALID_TOKEN] });
       }

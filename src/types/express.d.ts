@@ -10,6 +10,13 @@ declare global {
         iat?: number;
         exp?: number;
       };
+      admin?: {
+        sub: string;
+        email: string;
+        role: 'SUPER_ADMIN' | 'ADMIN';
+        iat?: number;
+        exp?: number;
+      };
     }
   }
 }

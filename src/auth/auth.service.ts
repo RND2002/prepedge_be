@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { User, RefreshToken, PasswordResetToken, OTPVerification, IUser } from '../users/user.schema';
+import { UserModeration } from '../admin/admin.model';
 import * as emailService from '../lib/email';
 import { ErrorCodes } from '../lib/errors';
 
@@ -79,6 +80,11 @@ export const verifyOTP = async (email: string, otp: string, ipAddress?: string, 
     throw new Error(ErrorCodes.USER_NOT_FOUND);
   }
 
+  const moderation = await UserModeration.findOne({ userId: user._id, isSuspended: true });
+  if (moderation) {
+    throw new Error('USER_SUSPENDED');
+  }
+
   const otpRecord = await OTPVerification.findOne({ userId: user._id }).sort({ createdAt: -1 });
   if (!otpRecord) {
     throw new Error(ErrorCodes.INVALID_OR_EXPIRED_TOKEN);
@@ -109,6 +115,11 @@ export const login = async (data: any, ipAddress?: string, userAgent?: string) =
   const user = await User.findOne({ email: data.email }).populate('onboarding');
   if (!user || !user.password_hash) {
     throw new Error(ErrorCodes.INVALID_CREDENTIALS);
+  }
+
+  const moderation = await UserModeration.findOne({ userId: user._id, isSuspended: true });
+  if (moderation) {
+    throw new Error('USER_SUSPENDED');
   }
 
   const isMatch = await bcrypt.compare(data.password, user.password_hash);
@@ -146,6 +157,11 @@ export const googleAuth = async (idToken: string, ipAddress?: string, userAgent?
     await user.save();
   }
 
+  const moderation = await UserModeration.findOne({ userId: user._id, isSuspended: true });
+  if (moderation) {
+    throw new Error('USER_SUSPENDED');
+  }
+
   await user.populate('onboarding');
   const tokens = await generateTokens(user, ipAddress, userAgent);
   const { password_hash: _, ...userWithoutPassword } = user.toObject();
@@ -174,6 +190,11 @@ export const refresh = async (rawRefreshToken: string, ipAddress?: string, userA
   const user = await User.findById(storedToken.userId);
   if (!user) {
     throw new Error(ErrorCodes.USER_NOT_FOUND);
+  }
+
+  const moderation = await UserModeration.findOne({ userId: user._id, isSuspended: true });
+  if (moderation) {
+    throw new Error('USER_SUSPENDED');
   }
 
   // Fix NextAuth App Router token rotation issue:

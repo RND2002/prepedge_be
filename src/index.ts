@@ -11,13 +11,15 @@ import userRouter from './users/user.route';
 import onboardingRouter from './onboarding/onboarding.route';
 import dashboardRouter from './dashboard/dashboard.route';
 import interviewRouter from './interview/interview.route';
+import adminRouter from './admin/admin.route';
+import { seedDefaultAdmin } from './admin/admin.service';
 import { startStaleSessionCronJob } from './jobs/expireStaleSessions';
 
 const app = express();
 
 // Security Middleware
 app.use(helmet());
-app.use(cors({ origin: [process.env.FRONTEND_URL as string, 'https://release-prepedge.netlify.app'] }));
+app.use(cors({ origin: [process.env.FRONTEND_URL as string, 'https://release-prepedge.netlify.app', 'http://localhost:3000'] }));
 
 // Body parser with 10kb limit
 app.use(express.json({ limit: '10kb' }));
@@ -33,6 +35,7 @@ app.use('/api/users', userRouter);
 app.use('/api/onboarding', onboardingRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/interview', interviewRouter);
+app.use('/api/admin', adminRouter);
 
 // Initialize and start server
 const PORT = Number(process.env.PORT) || 8080;
@@ -43,7 +46,12 @@ const startServer = async () => {
   console.log(`MONGODB_URI Variable: ${process.env.MONGODB_URI ? 'SET' : 'MISSING'}`);
   console.log('---------------------------');
 
-  await connectToDatabase();
+  await connectToDatabase().then(async () => {
+    await seedDefaultAdmin();
+  })
+    .catch((error) => {
+      console.error('Initial database connection failed:', error);
+    });
 
   startStaleSessionCronJob();
 
