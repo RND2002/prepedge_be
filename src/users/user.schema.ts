@@ -11,6 +11,12 @@ export interface IUser extends Document {
   is_email_verified: boolean;
   role: string;
   onboarding?: mongoose.Types.ObjectId | OnboardingData;
+  referredBy?: {
+    ambassadorId: mongoose.Types.ObjectId;
+    referralCode: string;
+    referredAt: Date;
+    credited: boolean;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,7 +30,13 @@ const UserSchema: Schema = new Schema(
     google_id: { type: String, unique: true, sparse: true },
     is_email_verified: { type: Boolean, default: false },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
-    onboarding: { type: Schema.Types.ObjectId, ref: 'Onboarding' }
+    onboarding: { type: Schema.Types.ObjectId, ref: 'Onboarding' },
+    referredBy: {
+      ambassadorId: { type: Schema.Types.ObjectId, ref: 'Ambassador', default: null },
+      referralCode: { type: String, default: null },
+      referredAt: { type: Date, default: null },
+      credited: { type: Boolean, default: false }
+    }
   },
   { timestamps: true }
 );

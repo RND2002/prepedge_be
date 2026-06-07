@@ -11,6 +11,7 @@ import userRouter from './users/user.route';
 import onboardingRouter from './onboarding/onboarding.route';
 import dashboardRouter from './dashboard/dashboard.route';
 import interviewRouter from './interview/interview.route';
+import ambassadorRouter from './ambassador/ambassador.route';
 import adminRouter from './admin/admin.route';
 import { seedDefaultAdmin } from './admin/admin.service';
 import { startStaleSessionCronJob } from './jobs/expireStaleSessions';
@@ -35,6 +36,7 @@ app.use('/api/users', userRouter);
 app.use('/api/onboarding', onboardingRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/interview', interviewRouter);
+app.use('/api/ambassador', ambassadorRouter);
 app.use('/api/admin', adminRouter);
 
 // Initialize and start server

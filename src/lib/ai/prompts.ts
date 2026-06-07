@@ -21,7 +21,8 @@ Rules:
 2. If the user has known weak areas, dedicate at least 30-40% of the questions to heavily test those areas.
 3. Mix up the difficulty: include 'conceptual', 'practical', 'scenario', and 'debug' type questions.
 4. 'mustCover' should be 2-4 critical technical keywords or concepts required to pass.
-5. Provide realistic 'timerAllotted' (e.g., 60 for simple concept, 180 for complex scenario).`;
+5. Provide realistic 'timerAllotted' (e.g., 60 for simple concept, 180 for complex scenario).
+6. Keep question text and descriptions concise to save output tokens.`;
 
 export interface AIEvaluationSessionConfig {
   targetRole: string;
@@ -58,7 +59,8 @@ Evaluation Rules:
 6. A skipped question MUST score 0.
 7. Short answers that miss key practical concepts score 3-4 maximum.
 8. idealAnswerFull: max 120 words. idealAnswerSummary: max 30 words.
-9. strengths: exactly 2 items, max 12 words each. gaps: exactly 2-3 items, max 12 words each.`;
+9. strengths: exactly 2 items, max 12 words each. gaps: exactly 2-3 items, max 12 words each.
+10. Keep all feedback, reasoning, and generated text extremely concise to save tokens and prevent huge responses.`;
 
 export const buildUserMessage = (answers: any[]) => {
   return answers.map((a, i) => {

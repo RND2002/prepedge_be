@@ -3,6 +3,7 @@ import { Onboarding } from './onboarding.schema';
 import { OnboardingStepPayload } from './onboarding.types';
 import { ErrorCodes } from '../lib/errors';
 import mongoose from 'mongoose';
+import { creditReferral } from '../ambassador/ambassador.service';
 
 export class OnboardingService {
   async updateStep(userId: string, payload: OnboardingStepPayload) {
@@ -30,6 +31,13 @@ export class OnboardingService {
     if (payload.currentStep === 7) {
       onboarding.isComplete = true;
       onboarding.completedAt = new Date();
+      
+      try {
+        await creditReferral(userId);
+      } catch (err) {
+        console.error('Failed to credit referral:', err);
+      }
+      
       // TODO: send welcome email here
     }
 

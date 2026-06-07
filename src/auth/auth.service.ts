@@ -7,6 +7,7 @@ import { User, RefreshToken, PasswordResetToken, OTPVerification, IUser } from '
 import { UserModeration } from '../admin/admin.model';
 import * as emailService from '../lib/email';
 import { ErrorCodes } from '../lib/errors';
+import { trackReferral } from '../ambassador/ambassador.service';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -51,12 +52,25 @@ export const signup = async (data: any, ipAddress?: string, userAgent?: string) 
   }
 
   const password_hash = await bcrypt.hash(data.password, 12);
-  const user = await User.create({
+  
+  const userPayload: any = {
     name: data.name,
     email: data.email,
     password_hash,
     is_email_verified: false,
-  });
+  };
+
+
+
+  const user = await User.create(userPayload);
+
+  if (data.referralCode) {
+    try {
+      await trackReferral(data.referralCode, user._id.toString());
+    } catch (err) {
+      console.error('Failed to track referral:', err);
+    }
+  }
 
   const rawOTP = generateOTP();
   const hashedOTP = await bcrypt.hash(rawOTP, 12);
@@ -133,7 +147,7 @@ export const login = async (data: any, ipAddress?: string, userAgent?: string) =
   return { ...tokens, user: userWithoutPassword };
 };
 
-export const googleAuth = async (idToken: string, ipAddress?: string, userAgent?: string) => {
+export const googleAuth = async (idToken: string, ipAddress?: string, userAgent?: string, referralCode?: string) => {
   const ticket = await googleClient.verifyIdToken({
     idToken,
     audience: process.env.GOOGLE_CLIENT_ID,
@@ -152,6 +166,14 @@ export const googleAuth = async (idToken: string, ipAddress?: string, userAgent?
       avatar: payload.picture,
       is_email_verified: payload.email_verified,
     });
+    
+    if (referralCode) {
+      try {
+        await trackReferral(referralCode, user._id.toString());
+      } catch (err) {
+        console.error('Failed to track referral:', err);
+      }
+    }
   } else if (!user.google_id) {
     user.google_id = payload.sub;
     await user.save();

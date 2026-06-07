@@ -103,9 +103,9 @@ export const googleAuth = async (req: Request, res: Response) => {
   }
 
   try {
-    const ipAddress = req.ip;
+    const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.headers['user-agent'];
-    const { accessToken, refreshToken, user } = await authService.googleAuth(req.body.idToken, ipAddress, userAgent);
+    const { accessToken, refreshToken, user } = await authService.googleAuth(req.body.idToken, ipAddress, userAgent, req.body.referralCode);
 
     setRefreshCookie(res, refreshToken);
     res.json({ accessToken, refreshToken, user });
