@@ -60,6 +60,7 @@ export const startInterview = async (userId: string, frontendConfig: FrontendInt
     experienceLevel: onboarding.experienceLevel,
     targetRole: onboarding.targetRole,
     companyTarget: onboarding.targetCompanies?.join(', ') || 'Product companies',
+    additionalSkills: onboarding.additionalSkills || [],
   };
 
   const session = await InterviewSession.create({
@@ -70,7 +71,8 @@ export const startInterview = async (userId: string, frontendConfig: FrontendInt
       stack: aiConfig.stack,
       experienceLevel: aiConfig.experienceLevel,
       targetRole: aiConfig.targetRole,
-      companyTarget: aiConfig.companyTarget
+      companyTarget: aiConfig.companyTarget,
+      additionalSkills: aiConfig.additionalSkills
     },
     status: 'questions_generated', // Using this to mean "generating"
     questions: [],

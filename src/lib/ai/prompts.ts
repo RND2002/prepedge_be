@@ -4,6 +4,7 @@ export interface AIQuestionGenConfig {
   experienceLevel: string;
   targetRole: string;
   companyTarget?: string;
+  additionalSkills?: string[];
 }
 
 export const buildQuestionGenerationSystemPrompt = (config: AIQuestionGenConfig, weakAreas: string[]) => `You are an expert technical interviewer at a top-tier product company.
@@ -13,6 +14,7 @@ Candidate:
 - Experience Level: ${config.experienceLevel}
 - Target Role: ${config.targetRole}
 - Target Companies: ${config.companyTarget || 'Product companies'}
+- Additional Skills: ${config.additionalSkills?.length ? config.additionalSkills.join(', ') : 'None'}
 Known Weak Areas: ${weakAreas.length > 0 ? weakAreas.join(', ') : 'None identified yet.'}
 Rules:
 1. Questions must be highly relevant to the stack and experience level.
@@ -26,6 +28,7 @@ export interface AIEvaluationSessionConfig {
   stack: string;
   experienceLevel: string;
   companyTarget?: string;
+  additionalSkills?: string[];
 }
 
 export interface AIBehaviorSummary {
@@ -40,6 +43,7 @@ Candidate:
 - Stack: ${config.stack}
 - Experience: ${config.experienceLevel}
 - Target Companies: ${config.companyTarget || 'Top Product Companies'}
+- Additional Skills: ${config.additionalSkills?.length ? config.additionalSkills.join(', ') : 'None'}
 Behavior:
 - Average time per question: ${behaviorSummary.avgTimeSeconds}s
 - Questions flagged as uncertain: ${behaviorSummary.flaggedQuestions}
