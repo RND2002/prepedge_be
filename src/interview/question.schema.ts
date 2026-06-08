@@ -44,7 +44,7 @@ const QuestionSchema = new Schema(
     stack: { 
       type: String, 
       required: true,
-      enum: ['COLLEGE_FRESHER', 'MERN_EXPERIENCED', 'MERN_FRESHER', 'MEAN_EXPERIENCED', 'PYTHON', 'GOLANG', 'JAVA'] 
+      enum: ['COLLEGE_FRESHER', 'MERN', 'MEAN', 'REACT', 'PYTHON', 'GOLANG', 'JAVA', 'MANUAL_TESTING', 'AUTOMATION_TESTING', 'DEVOPS', 'DATA_ANALYST', 'DATA_ENGINEER', 'REACT_NATIVE', 'FLUTTER', 'SPRING_BOOT', 'DJANGO', 'FASTAPI', 'SQL_FUNDAMENTALS', 'CYBER_SECURITY']
     },
     topic: { type: String, required: true },
     subTopic: { type: String, required: true },

@@ -26,9 +26,9 @@ export class OnboardingService {
     }
 
     // Safely update onboarding object
-    Object.assign(onboarding, payload);
+    onboarding.set(payload);
 
-    if (payload.currentStep === 7) {
+    if (payload.currentStep === 8) {
       onboarding.isComplete = true;
       onboarding.completedAt = new Date();
       
@@ -43,7 +43,7 @@ export class OnboardingService {
 
     await onboarding.save();
 
-    if (payload.currentStep === 7) {
+    if (payload.currentStep === 8) {
       return { onboarding, nextStep: '/dashboard' };
     }
 

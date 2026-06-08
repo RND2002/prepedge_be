@@ -13,6 +13,7 @@ export interface IInterviewSession extends Document {
     timerMode: 'per_question' | 'total_session' | null;
     focusTopics: string[];
     companyTarget?: string;
+    userName?: string;
   };
   status: 'questions_generated' | 'in_progress' | 'submitted' | 'evaluating' | 'completed' | 'abandoned' | 'expired';
   questions: Array<{
@@ -83,6 +84,7 @@ const InterviewSessionSchema = new Schema(
       timerMode: { type: String, enum: ['per_question', 'total_session', null] },
       focusTopics: [{ type: String }],
       companyTarget: { type: String },
+      userName: { type: String },
     },
     status: {
       type: String,

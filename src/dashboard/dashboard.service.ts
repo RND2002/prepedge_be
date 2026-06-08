@@ -9,7 +9,7 @@ export const dashboardService = {
     if (!user) throw new Error('User not found');
 
     const onboarding = await Onboarding.findOne({ user: userId });
-    const track = onboarding?.track || 'MERN_FRESHER';
+    const track = onboarding?.track || 'MERN';
 
     // Fetch completed sessions
     const completedSessions = await InterviewSession.find({ 

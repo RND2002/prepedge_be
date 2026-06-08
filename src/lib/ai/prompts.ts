@@ -5,11 +5,13 @@ export interface AIQuestionGenConfig {
   targetRole: string;
   companyTarget?: string;
   additionalSkills?: string[];
+  userName?: string;
 }
 
 export const buildQuestionGenerationSystemPrompt = (config: AIQuestionGenConfig, weakAreas: string[]) => `You are an expert technical interviewer at a top-tier product company.
-Generate exactly ${config.totalQuestions} interview questions for a candidate.
+Generate exactly ${config.totalQuestions} interview questions for a candidate${config.userName ? ` named ${config.userName}` : ''}.
 Candidate:
+${config.userName ? `- Name: ${config.userName}` : ''}
 - Stack: ${config.stack}
 - Experience Level: ${config.experienceLevel}
 - Target Role: ${config.targetRole}
@@ -22,7 +24,8 @@ Rules:
 3. Mix up the difficulty: include 'conceptual', 'practical', 'scenario', and 'debug' type questions.
 4. 'mustCover' should be 2-4 critical technical keywords or concepts required to pass.
 5. Provide realistic 'timerAllotted' (e.g., 60 for simple concept, 180 for complex scenario).
-6. Keep question text and descriptions concise to save output tokens.`;
+6. Keep question text and descriptions concise to save output tokens.
+7. Address the candidate by their name occasionally in the scenario descriptions or question text to make it feel personal and conversational.`;
 
 export interface AIEvaluationSessionConfig {
   targetRole: string;
@@ -30,6 +33,7 @@ export interface AIEvaluationSessionConfig {
   experienceLevel: string;
   companyTarget?: string;
   additionalSkills?: string[];
+  userName?: string;
 }
 
 export interface AIBehaviorSummary {
@@ -41,6 +45,7 @@ export interface AIBehaviorSummary {
 
 export const buildSystemPrompt = (config: AIEvaluationSessionConfig, behaviorSummary: AIBehaviorSummary) => `You are a strict but fair senior software engineer conducting a technical interview for a ${config.targetRole} position at a product company.
 Candidate:
+${config.userName ? `- Name: ${config.userName}` : ''}
 - Stack: ${config.stack}
 - Experience: ${config.experienceLevel}
 - Target Companies: ${config.companyTarget || 'Top Product Companies'}
@@ -61,7 +66,8 @@ Evaluation Rules:
 8. idealAnswerFull: max 120 words. idealAnswerSummary: max 30 words.
 9. strengths: exactly 2 items, max 12 words each. gaps: exactly 2-3 items, max 12 words each.
 10. Keep all feedback, reasoning, and generated text extremely concise to save tokens and prevent huge responses.
-11. Be lenient about syntax errors or minor typos. Focus on the core logic, concepts, and problem-solving approach. Pseudo-code is completely acceptable.`;
+11. Be lenient about syntax errors or minor typos. Focus on the core logic, concepts, and problem-solving approach. Pseudo-code is completely acceptable.
+12. Address the candidate by their name occasionally in your personalizedFeedback to make it feel personal and conversational.`;
 
 export const buildUserMessage = (answers: any[]) => {
   return answers.map((a, i) => {

@@ -4,6 +4,7 @@ import { Answer } from './answer.schema';
 import { Question } from './question.schema';
 import { UserPerformance } from './user-performance.schema';
 import { Onboarding } from '../onboarding/onboarding.schema';
+import { User } from '../users/user.schema';
 import { evaluateSessionWithAI, generateQuestionsWithAI } from '../lib/ai/evaluator';
 import { buildHumanContext } from './interview.helpers';
 import { subDays, isAfter, formatDistanceToNow } from 'date-fns';
@@ -49,6 +50,9 @@ export const startInterview = async (userId: string, frontendConfig: FrontendInt
     throw new Error('Incomplete onboarding profile. Please complete onboarding first.');
   }
 
+  const user = await User.findById(userId);
+  const userName = onboarding.displayName || user?.name || undefined;
+
   // Fetch weak areas
   const performance = await UserPerformance.findOne({ userId });
   const weakAreas = performance ? performance.persistentWeakAreas.map((wa: any) => wa.topic) : [];
@@ -61,6 +65,7 @@ export const startInterview = async (userId: string, frontendConfig: FrontendInt
     targetRole: onboarding.targetRole,
     companyTarget: onboarding.targetCompanies?.join(', ') || 'Product companies',
     additionalSkills: onboarding.additionalSkills || [],
+    userName,
   };
 
   const session = await InterviewSession.create({
@@ -72,7 +77,8 @@ export const startInterview = async (userId: string, frontendConfig: FrontendInt
       experienceLevel: aiConfig.experienceLevel,
       targetRole: aiConfig.targetRole,
       companyTarget: aiConfig.companyTarget,
-      additionalSkills: aiConfig.additionalSkills
+      additionalSkills: aiConfig.additionalSkills,
+      userName: aiConfig.userName,
     },
     status: 'questions_generated', // Using this to mean "generating"
     questions: [],

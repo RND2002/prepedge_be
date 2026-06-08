@@ -5,6 +5,8 @@ import { validateOnboardingStep } from './onboarding.validator';
 
 const router = Router();
 
+router.get('/config', onboardingController.getConfig);
+
 router.use(authenticate);
 
 router.patch('/step', validateOnboardingStep, onboardingController.updateStep);

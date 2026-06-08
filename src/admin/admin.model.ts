@@ -24,8 +24,6 @@ const AdminSchema = new Schema<IAdmin>(
   { timestamps: true }
 );
 
-AdminSchema.index({ email: 1 });
-
 export const Admin = mongoose.model<IAdmin>('Admin', AdminSchema);
 
 // 2. Admin Refresh Token Model

@@ -3,6 +3,7 @@ import { validationResult } from 'express-validator';
 import { onboardingService } from './onboarding.service';
 import { ErrorCodes, ErrorMessages } from '../lib/errors';
 import mongoose from 'mongoose';
+import { TRACK_CONFIG } from './onboarding.constants';
 
 export class OnboardingController {
   async updateStep(req: Request, res: Response) {
@@ -35,7 +36,12 @@ export class OnboardingController {
       }
       
       console.error('Onboarding update error:', error);
-      return res.status(500).json({ message: ErrorMessages[ErrorCodes.INTERNAL_ERROR] });
+      return res.status(500).json({ 
+        message: ErrorMessages[ErrorCodes.INTERNAL_ERROR],
+        errorName: error.name,
+        errorMessage: error.message,
+        errorStack: error.stack
+      });
     }
   }
 
@@ -57,6 +63,10 @@ export class OnboardingController {
       console.error('Onboarding status error:', error);
       return res.status(500).json({ message: ErrorMessages[ErrorCodes.INTERNAL_ERROR] });
     }
+  }
+
+  getConfig(req: Request, res: Response) {
+    return res.status(200).json(TRACK_CONFIG);
   }
 }
 
