@@ -60,7 +60,8 @@ Evaluation Rules:
 7. Short answers that miss key practical concepts score 3-4 maximum.
 8. idealAnswerFull: max 120 words. idealAnswerSummary: max 30 words.
 9. strengths: exactly 2 items, max 12 words each. gaps: exactly 2-3 items, max 12 words each.
-10. Keep all feedback, reasoning, and generated text extremely concise to save tokens and prevent huge responses.`;
+10. Keep all feedback, reasoning, and generated text extremely concise to save tokens and prevent huge responses.
+11. Be lenient about syntax errors or minor typos. Focus on the core logic, concepts, and problem-solving approach. Pseudo-code is completely acceptable.`;
 
 export const buildUserMessage = (answers: any[]) => {
   return answers.map((a, i) => {
