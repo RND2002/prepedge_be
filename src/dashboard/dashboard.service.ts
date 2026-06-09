@@ -2,6 +2,7 @@ import { User } from '../users/user.schema';
 import { Onboarding } from '../onboarding/onboarding.schema';
 import { InterviewSession } from '../interview/interview-session.schema';
 import { format, subDays } from 'date-fns';
+import { RitualWaitlist } from '../ritual/ritual.schema';
 
 export const dashboardService = {
   getStats: async (userId: string) => {
@@ -10,6 +11,10 @@ export const dashboardService = {
 
     const onboarding = await Onboarding.findOne({ user: userId });
     const track = onboarding?.track || 'MERN';
+
+    // Check if user has joined ritual waitlist
+    const ritualEntry = await RitualWaitlist.findOne({ userId });
+    const hasJoinedRitual = !!ritualEntry;
 
     // Fetch completed sessions
     const completedSessions = await InterviewSession.find({ 
@@ -159,6 +164,7 @@ export const dashboardService = {
     return {
       user: { name: user.name, role: user.role },
       hasCompletedInterviews: completedSessions.length > 0,
+      hasJoinedRitual,
       skillScore: {
         current: currentScore,
         delta: deltaStr

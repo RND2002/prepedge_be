@@ -13,6 +13,7 @@ import dashboardRouter from './dashboard/dashboard.route';
 import interviewRouter from './interview/interview.route';
 import ambassadorRouter from './ambassador/ambassador.route';
 import adminRouter from './admin/admin.route';
+import ritualRouter from './ritual/ritual.route';
 import { seedDefaultAdmin } from './admin/admin.service';
 import { startStaleSessionCronJob } from './jobs/expireStaleSessions';
 
@@ -38,6 +39,7 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/interview', interviewRouter);
 app.use('/api/ambassador', ambassadorRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/ritual', ritualRouter);
 
 // Initialize and start server
 const PORT = Number(process.env.PORT) || 8080;
