@@ -12,7 +12,7 @@ import { trackReferral } from '../ambassador/ambassador.service';
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const ACCESS_SECRET = process.env.ACCESS_SECRET || 'fallback_secret';
-const ACCESS_EXPIRES_IN = '15m'; // 2 seconds for testing
+const ACCESS_EXPIRES_IN = '15m'; // 15 minutes
 const REFRESH_EXPIRES_IN_DAYS = 30;
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
