@@ -16,5 +16,21 @@ export const dashboardController = {
       console.error('Dashboard Stats Error:', error);
       res.status(500).json({ message: error.message || 'Failed to fetch dashboard stats' });
     }
+  },
+
+  getTopPerformer: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = (req.user as any)?.sub; // from auth middleware
+      if (!userId) {
+        res.status(401).json({ message: 'Unauthorized' });
+        return;
+      }
+
+      const topPerformer = await dashboardService.getTopPerformer();
+      res.status(200).json(topPerformer);
+    } catch (error: any) {
+      console.error('Dashboard Top Performer Error:', error);
+      res.status(500).json({ message: error.message || 'Failed to fetch top performer' });
+    }
   }
 };

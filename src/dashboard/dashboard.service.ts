@@ -173,5 +173,43 @@ export const dashboardService = {
       trendData,
       vulnerabilities
     };
+  },
+
+  getTopPerformer: async () => {
+    const oneWeekAgo = subDays(new Date(), 7);
+    
+    // Find the completed interview session in the last 7 days with the highest overallScore
+    const topSession = await InterviewSession.findOne({
+      status: 'completed',
+      'results.overallScore': { $exists: true },
+      createdAt: { $gte: oneWeekAgo }
+    }).sort({ 'results.overallScore': -1 });
+
+    if (topSession) {
+      const user = await User.findById(topSession.userId);
+      if (user) {
+        const score = topSession.results?.overallScore || 0;
+        // Score is typically stored as a percentage (e.g. 85), divide by 10 to fit out of 10 scale
+        const normalizedScore = score > 10 ? score / 10 : score;
+        return {
+          id: String(user._id),
+          name: user.name,
+          score: Number(normalizedScore.toFixed(1)),
+          rank: 1,
+          badge: 'Interview Champion',
+          message: 'Outstanding performance across mock interviews this week.'
+        };
+      }
+    }
+
+    // Default Fallback Performer if database is empty / has no completed sessions in the last week
+    return {
+      id: 'fallback_1',
+      name: 'Prince Raj',
+      score: 8.6,
+      rank: 1,
+      badge: 'Interview Champion',
+      message: 'Outstanding performance across mock interviews this week.'
+    };
   }
 };
