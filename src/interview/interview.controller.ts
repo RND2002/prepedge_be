@@ -42,6 +42,34 @@ export const startInterview = async (req: Request, res: Response) => {
   }
 };
 
+export const startRitualInterview = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.sub;
+    const { ritualId, dayNumber, ...frontendConfig } = req.body;
+    
+    if (!ritualId || typeof dayNumber !== 'number') {
+      return res.status(400).json({ message: 'ritualId and dayNumber are required' });
+    }
+
+    const session = await interviewService.startRitualInterview(userId, ritualId, dayNumber, frontendConfig);
+    res.status(202).json(session);
+  } catch (error: any) {
+    if (error.message === 'ACTIVE_SESSION_EXISTS') {
+      return res.status(409).json({
+        success: false,
+        error: "ACTIVE_SESSION_EXISTS",
+        humanMessage: "Finish your current interview first",
+        resumeContext: {
+          sessionId: error.activeSessionId,
+          resumeUrl: `/interview/session/${error.activeSessionId}`
+        }
+      });
+    }
+    console.error('Error starting ritual interview:', error);
+    res.status(500).json({ message: error.message || 'Failed to start ritual interview' });
+  }
+};
+
 export const saveAnswer = async (req: Request, res: Response) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {

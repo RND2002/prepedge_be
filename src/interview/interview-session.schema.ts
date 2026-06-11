@@ -15,6 +15,8 @@ export interface IInterviewSession extends Document {
     companyTarget?: string;
     userName?: string;
   };
+  ritualRef?: mongoose.Types.ObjectId;
+  ritualDayNumber?: number;
   status: 'questions_generated' | 'in_progress' | 'submitted' | 'evaluating' | 'completed' | 'abandoned' | 'expired';
   questions: Array<{
     questionId: mongoose.Types.ObjectId;
@@ -86,6 +88,8 @@ const InterviewSessionSchema = new Schema(
       companyTarget: { type: String },
       userName: { type: String },
     },
+    ritualRef: { type: Schema.Types.ObjectId, ref: 'Ritual' },
+    ritualDayNumber: { type: Number },
     status: {
       type: String,
       enum: ['questions_generated', 'in_progress', 'submitted', 'evaluating', 'completed', 'abandoned', 'expired'],

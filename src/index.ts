@@ -16,12 +16,13 @@ import adminRouter from './admin/admin.route';
 import ritualRouter from './ritual/ritual.route';
 import { seedDefaultAdmin } from './admin/admin.service';
 import { startStaleSessionCronJob } from './jobs/expireStaleSessions';
+import { startRitualCronJobs } from './jobs/ritualCron';
 
 const app = express();
 
 // Security Middleware
 app.use(helmet());
-app.use(cors({ origin: [process.env.FRONTEND_URL as string, 'https://release-prepedge.netlify.app', 'http://localhost:3000'] }));
+app.use(cors({ origin: [process.env.FRONTEND_URL as string, 'https://release-prepedge.netlify.app', 'http://localhost:3000'], credentials: true }));
 
 // Body parser with 10kb limit
 app.use(express.json({ limit: '10kb' }));
@@ -58,6 +59,7 @@ const startServer = async () => {
     });
 
   startStaleSessionCronJob();
+  startRitualCronJobs();
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);

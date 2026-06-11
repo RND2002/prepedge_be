@@ -9,6 +9,7 @@ const router = Router();
 router.use(authenticate);
 
 router.post('/start', interviewValidator.startInterviewValidator, interviewController.startInterview);
+router.post('/ritual/start', interviewController.startRitualInterview);
 router.post('/answer', interviewValidator.saveAnswerValidator, interviewController.saveAnswer);
 router.post('/submit', interviewValidator.submitInterviewValidator, interviewController.submitInterview);
 router.get('/status/:sessionId', interviewController.getStatus);

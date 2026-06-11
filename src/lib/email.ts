@@ -66,3 +66,41 @@ export const sendOTPVerificationEmail = async (email: string, otp: string) => {
     console.error('Failed to send OTP email:', error);
   }
 };
+
+export const sendDayCompletionEmail = async (email: string, dayNumber: number, focusTopic: string, streak: number) => {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: `PrepEdge <${fromEmail}>`,
+      to: [email],
+      subject: `PrepEdge: Day ${dayNumber} Completed! 🚀`,
+      html: `
+        <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; background-color: #0D0D0D; color: #E0E0E0; padding: 40px; border-radius: 12px; border: 1px solid #1A1A1A;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <span style="color: #F0A500; font-size: 40px; font-weight: bold;">[ ]</span>
+            <h1 style="color: #F0A500; font-size: 28px; margin-top: 10px; margin-bottom: 0;">Prepedge</h1>
+          </div>
+          <h2 style="color: #FFFFFF; font-size: 22px; font-weight: 600; text-align: center; margin-bottom: 20px;">Day ${dayNumber} Complete!</h2>
+          <p style="font-size: 16px; color: #A0A0A0; line-height: 1.5; text-align: center;">Great job! You have successfully completed all your tasks for today.</p>
+          
+          <div style="background-color: #1A1A1A; border: 1px solid #333333; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+            <p style="font-size: 14px; color: #A0A0A0; margin-bottom: 10px;">Today's Focus</p>
+            <span style="font-size: 18px; font-weight: bold; color: #FFFFFF;">${focusTopic}</span>
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333333;">
+               <span style="font-size: 24px; font-weight: bold; color: #F0A500;">🔥 ${streak} Day Streak</span>
+            </div>
+          </div>
+
+          <p style="font-size: 14px; color: #A0A0A0; text-align: center; margin-top: 20px;">Keep the momentum going! Log in tomorrow to tackle your next challenge.</p>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error('Error sending day completion email:', error);
+    } else {
+      console.log('Day completion email sent:', data);
+    }
+  } catch (error) {
+    console.error('Failed to send day completion email:', error);
+  }
+};

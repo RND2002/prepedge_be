@@ -12,7 +12,7 @@ import { trackReferral } from '../ambassador/ambassador.service';
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const ACCESS_SECRET = process.env.ACCESS_SECRET || 'fallback_secret';
-const ACCESS_EXPIRES_IN = '15m'; // 15 minutes
+const ACCESS_EXPIRES_IN = '15m'; // 2 seconds for testing
 const REFRESH_EXPIRES_IN_DAYS = 30;
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
@@ -52,7 +52,7 @@ export const signup = async (data: any, ipAddress?: string, userAgent?: string) 
   }
 
   const password_hash = await bcrypt.hash(data.password, 12);
-  
+
   const userPayload: any = {
     name: data.name,
     email: data.email,
@@ -166,7 +166,7 @@ export const googleAuth = async (idToken: string, ipAddress?: string, userAgent?
       avatar: payload.picture,
       is_email_verified: payload.email_verified,
     });
-    
+
     if (referralCode) {
       try {
         await trackReferral(referralCode, user._id.toString());
@@ -224,10 +224,10 @@ export const refresh = async (rawRefreshToken: string, ipAddress?: string, userA
   // will keep sending the same refresh token. If we rotate it here, the first
   // request revokes it and subsequent requests fail. 
   // Solution: Do not rotate refresh tokens. Just return a new access token.
-  
+
   const payload = { sub: user._id, email: user.email, role: user.role };
   const accessToken = jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_EXPIRES_IN });
-  
+
   return { accessToken, newRefreshToken: rawRefreshToken };
 };
 

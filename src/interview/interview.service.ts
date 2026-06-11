@@ -6,6 +6,7 @@ import { UserPerformance } from './user-performance.schema';
 import { Onboarding } from '../onboarding/onboarding.schema';
 import { User } from '../users/user.schema';
 import { evaluateSessionWithAI, generateQuestionsWithAI } from '../lib/ai/evaluator';
+import { generateRitualInterviewQuestions } from '../lib/ai/ritual-ai';
 import { buildHumanContext } from './interview.helpers';
 import { subDays, isAfter, formatDistanceToNow } from 'date-fns';
 
@@ -57,13 +58,17 @@ export const startInterview = async (userId: string, frontendConfig: FrontendInt
   const performance = await UserPerformance.findOne({ userId });
   const weakAreas = performance ? performance.persistentWeakAreas.map((wa: any) => wa.topic) : [];
 
+  // Check if user has an active ritual to pull company context
+  const Ritual = mongoose.model('Ritual');
+  const activeRitual = await Ritual.findOne({ user: userId, status: { $in: ['active', 'game_day'] } });
+
   // Merge AI Config
   const aiConfig = {
     totalQuestions: frontendConfig.totalQuestions,
     stack: onboarding.track,
     experienceLevel: onboarding.experienceLevel,
     targetRole: onboarding.targetRole,
-    companyTarget: onboarding.targetCompanies?.join(', ') || 'Product companies',
+    companyTarget: activeRitual ? activeRitual.company : (onboarding.targetCompanies?.join(', ') || 'Product companies'),
     additionalSkills: onboarding.additionalSkills || [],
     userName,
   };
@@ -138,6 +143,150 @@ const generateQuestionsBackground = async (sessionId: mongoose.Types.ObjectId, a
     });
   } catch (error) {
     console.error('Failed to generate questions:', error);
+    await InterviewSession.findByIdAndUpdate(sessionId, {
+      status: 'abandoned',
+      abandonReason: 'system'
+    });
+  }
+};
+
+export const startRitualInterview = async (userId: string, ritualId: string, dayNumber: number, frontendConfig: FrontendInterviewConfig) => {
+  const activeSession = await InterviewSession.findOne({
+    userId,
+    status: { $in: ['questions_generated', 'in_progress', 'submitted', 'evaluating'] }
+  });
+
+  if (activeSession) {
+    const error: any = new Error('ACTIVE_SESSION_EXISTS');
+    error.activeSessionId = activeSession._id;
+    throw error;
+  }
+
+  const Ritual = mongoose.model('Ritual');
+  const ritual = await Ritual.findOne({ _id: ritualId, user: userId }).populate('companyProfile');
+  if (!ritual) throw new Error('Ritual not found');
+
+  const ritualDay = ritual.days.find((d: any) => d.dayNumber === dayNumber);
+  if (!ritualDay) throw new Error('Ritual day not found');
+
+  if (ritualDay.isCompleted) {
+    throw new Error('This ritual day is already completed.');
+  }
+
+  const onboarding = await Onboarding.findOne({ user: userId });
+  if (!onboarding) throw new Error('Incomplete onboarding profile.');
+
+  const user = await User.findById(userId);
+  const userName = onboarding.displayName || user?.name || undefined;
+
+  const sessionConfig = {
+    ...frontendConfig,
+    totalQuestions: ritualDay.questionCount || 3,
+    stack: onboarding.track,
+    experienceLevel: onboarding.experienceLevel,
+    targetRole: onboarding.targetRole,
+    companyTarget: `${ritual.company} Day ${dayNumber}`,
+    userName,
+    timerEnabled: ritualDay.type === 'light_warmup' ? false : true,
+    timerMode: 'per_question' as const,
+    answerMode: frontendConfig.answerMode || 'written',
+  };
+
+  const performance = await UserPerformance.findOne({ userId });
+  const weakAreas = performance ? performance.persistentWeakAreas.map((wa: any) => wa.topic) : [];
+  const strongAreas = performance ? performance.history.slice(-2).flatMap((h: any) => h.results?.strongAreas || []) : [];
+
+  const session = await InterviewSession.create({
+    userId,
+    sessionNumber: performance ? performance.history.length + 1 : 1,
+    config: sessionConfig,
+    ritualRef: ritual._id,
+    ritualDayNumber: dayNumber,
+    status: 'questions_generated',
+    questions: [],
+    timing: {
+      startedAt: new Date()
+    }
+  });
+
+  ritualDay.interviewSessionId = session._id as mongoose.Types.ObjectId;
+  await ritual.save();
+
+  generateRitualQuestionsBackground(
+    session._id as mongoose.Types.ObjectId, 
+    sessionConfig, 
+    ritual, 
+    ritualDay, 
+    weakAreas, 
+    strongAreas
+  ).catch(console.error);
+
+  return session;
+};
+
+const generateRitualQuestionsBackground = async (
+  sessionId: mongoose.Types.ObjectId, 
+  config: any, 
+  ritual: any, 
+  ritualDay: any, 
+  weakAreas: string[], 
+  strongAreas: string[]
+) => {
+  try {
+    const generatedQ = await generateRitualInterviewQuestions(
+      ritual.company,
+      ritual.companyProfile,
+      config.targetRole,
+      config.stack,
+      ritualDay.type,
+      config.totalQuestions,
+      weakAreas,
+      strongAreas
+    );
+
+    const questionDocs = await Promise.all(generatedQ.map((q: any) => {
+      const allottedSeconds = ritualDay.type === 'light_warmup' ? 0 : (q.timerAllotted || 180);
+      
+      return Question.create({
+        text: q.text,
+        stack: config.stack,
+        topic: q.topic,
+        subTopic: q.subTopic,
+        difficulty: q.difficulty,
+        level: config.experienceLevel,
+        timer: {
+          writtenSeconds: allottedSeconds,
+          spokenSeconds: allottedSeconds,
+          minimumSeconds: Math.floor(allottedSeconds * 0.3)
+        },
+        evaluationGuide: {
+          mustCover: q.mustCover,
+          shouldCover: [],
+          bonusIfMentions: [],
+          redFlags: [],
+          idealAnswerFull: q.idealAnswerFull
+        },
+        interviewerPerspective: q.interviewerPerspective,
+        createdBy: 'system'
+      });
+    }));
+
+    const sessionQuestions = questionDocs.map((doc, idx) => ({
+      questionId: doc._id,
+      questionText: doc.text,
+      topic: doc.topic,
+      subTopic: doc.subTopic,
+      difficulty: doc.difficulty,
+      sequenceNumber: idx + 1,
+      timerAllotted: doc.timer.writtenSeconds
+    }));
+
+    await InterviewSession.findByIdAndUpdate(sessionId, {
+      status: 'in_progress',
+      questions: sessionQuestions
+    });
+  } catch (error) {
+    console.error('Failed to generate ritual questions:', error);
     await InterviewSession.findByIdAndUpdate(sessionId, {
       status: 'abandoned',
       abandonReason: 'system'
@@ -268,6 +417,41 @@ const evaluateInterviewBackground = async (userId: string, sessionId: string) =>
     },
     { upsert: true, new: true }
   );
+
+  // Auto-complete active ritual day if applicable
+  try {
+    if (session.ritualRef && session.ritualDayNumber) {
+      const Ritual = mongoose.model('Ritual');
+      const activeRitual = await Ritual.findById(session.ritualRef);
+      
+      if (activeRitual) {
+        const currentDay = activeRitual.days.find((d: any) => d.dayNumber === session.ritualDayNumber);
+        
+        if (currentDay && !currentDay.isCompleted) {
+          const { RitualService } = require('../ritual/ritual.service');
+          
+          // Complete the day (triggers email, score update, etc)
+          await RitualService.completeDay(activeRitual._id.toString(), session.ritualDayNumber, 'confident');
+          
+          // Sync new weak areas into Ritual state from this evaluation
+          if (evaluationResult.session.weakAreas && evaluationResult.session.weakAreas.length > 0) {
+            // Keep unique weak areas
+            const updatedWeakAreas = new Set([...activeRitual.weakAreasAtStart, ...evaluationResult.session.weakAreas]);
+            activeRitual.weakAreasAtStart = Array.from(updatedWeakAreas);
+          }
+          
+          if (evaluationResult.session.strongAreas && evaluationResult.session.strongAreas.length > 0) {
+            const updatedStrongAreas = new Set([...activeRitual.strongAreasAtStart, ...evaluationResult.session.strongAreas]);
+            activeRitual.strongAreasAtStart = Array.from(updatedStrongAreas);
+          }
+          
+          await activeRitual.save();
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Failed to auto-complete ritual day:', err);
+  }
   } catch (error) {
     console.error('Failed to evaluate session:', error);
     await InterviewSession.findByIdAndUpdate(sessionId, {
