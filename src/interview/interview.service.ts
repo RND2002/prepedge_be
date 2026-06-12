@@ -35,14 +35,14 @@ export const startInterview = async (userId: string, frontendConfig: FrontendInt
   const todayEnd = new Date();
   todayEnd.setHours(23, 59, 59, 999);
 
-  const todayInterviewsCount = await InterviewSession.countDocuments({
-    userId,
-    createdAt: { $gte: todayStart, $lte: todayEnd }
-  });
-
-  if (todayInterviewsCount >= 2) {
-    throw new Error('DAILY_LIMIT_REACHED');
-  }
+  // const todayInterviewsCount = await InterviewSession.countDocuments({
+  //   userId,
+  //   createdAt: { $gte: todayStart, $lte: todayEnd }
+  // });
+  //
+  // if (todayInterviewsCount >= 2) {
+  //   throw new Error('DAILY_LIMIT_REACHED');
+  // }
 
   // Fetch user onboarding profile securely from DB
   const onboarding = await Onboarding.findOne({ user: userId });
