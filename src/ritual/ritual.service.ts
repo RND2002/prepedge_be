@@ -72,103 +72,11 @@ export const RitualService = {
     const companySlug = company.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     let companyProfile = await CompanyProfile.findOne({ slug: companySlug });
     
-    // Refresh if older than 30 days
+    // Check if it needs AI update
     const thirtyDaysAgo = addDays(new Date(), -30);
-    if (!companyProfile || companyProfile.updatedAt < thirtyDaysAgo) {
-      try {
-        const aiData = await generateCompanyIntelligence(company, role, track, experienceLevel);
-        
-        if (companyProfile) {
-          Object.assign(companyProfile, aiData);
-          await companyProfile.save();
-        } else {
-          companyProfile = await CompanyProfile.create({
-            ...aiData,
-            slug: companySlug,
-          });
-        }
-      } catch (err) {
-        console.error('Failed to generate company intel, proceeding with stub...', err);
-        // Fallback stub if AI fails
-        if (!companyProfile) {
-          companyProfile = await CompanyProfile.create({
-            name: company,
-            slug: companySlug,
-            tier: 'product',
-            interviewRounds: [{ roundName: 'Technical', focus: ['DSA', 'System Design'], weight: 100, tips: [] }],
-            knownTopics: ['DSA', 'System Design'],
-            behavioralFocus: ['Problem Solving'],
-            difficultyLevel: 'medium',
-            whatTheyReallyWantToHear: ['Structured thinking'],
-            commonMistakes: ['Jumping to coding too fast'],
-            insiderTips: ['Communicate clearly'],
-          });
-        }
-      }
-    }
+    const needsCompanyProfileUpdate = !companyProfile || companyProfile.updatedAt < thirtyDaysAgo;
 
-    // 4. Generate the day plan
-    const days: any[] = [];
-    
-    // Generate AI specific plan for ALL days
-    let aiPlan: any = null;
-    try {
-      aiPlan = await generateRitualPlan(company, companyProfile, role, track, experienceLevel, weakAreas, totalDays);
-    } catch (err) {
-      console.error('Failed to generate ritual plan via AI, falling back to static...', err);
-    }
 
-    if (aiPlan && aiPlan.days && aiPlan.days.length === totalDays) {
-      for (let i = 0; i < totalDays; i++) {
-        const aiDayInfo = aiPlan.days[i];
-        days.push({
-          dayNumber: i + 1,
-          date: addDays(today, i + 1),
-          type: aiDayInfo.type,
-          focusTopic: aiDayInfo.focusTopic,
-          subTopics: aiDayInfo.subTopics,
-          questionCount: aiDayInfo.questionCount,
-          timeLimitMinutes: aiDayInfo.timeLimitMinutes,
-          estimatedMinutes: aiDayInfo.timeLimitMinutes || 15,
-        });
-      }
-    } else {
-      // Fallback Static Generation (Basic)
-      for (let i = 1; i <= totalDays; i++) {
-        let type = 'mini_interview';
-        let qCount = 3;
-        let tLimit = 15;
-        let focus = 'Targeted Practice';
-        
-        if (i === 1) {
-          type = 'full_mock';
-          qCount = 5;
-          tLimit = 30;
-          focus = `Full Mock Interview on ${company}`;
-        } else if (i === totalDays) {
-          type = 'game_day';
-          qCount = 0;
-          tLimit = 0;
-          focus = 'Game Day';
-        } else if (i === totalDays - 1 && totalDays >= 4) {
-          type = 'light_warmup';
-          qCount = 2;
-          tLimit = 10;
-          focus = 'Light Warmup';
-        }
-
-        days.push({
-          dayNumber: i,
-          date: addDays(today, i),
-          type: type,
-          focusTopic: focus,
-          subTopics: ['Prepare your mindset', 'Review core concepts'],
-          questionCount: qCount,
-          timeLimitMinutes: tLimit,
-          estimatedMinutes: tLimit,
-        });
-      }
-    }
 
     // 5. Save the Ritual
     const ritual = await Ritual.create({
@@ -176,7 +84,7 @@ export const RitualService = {
       ritualNumber: previousRitualCount + 1,
       interviewDate,
       company,
-      companyProfile: companyProfile._id,
+      companyProfile: companyProfile?._id,
       role,
       jobDescription,
       track,
@@ -186,30 +94,84 @@ export const RitualService = {
       strongAreasAtStart: strongAreas,
       baselineScore,
       totalDays,
-      days,
-      status: 'active', // Assuming it's active right away if registered, or 'scheduled'
+      days: [],
+      status: 'generating', // Using generating status to allow frontend to poll
       activatedAt: new Date(),
     });
 
-    // 6. Send Activation Email
     const firstName = user.name ? user.name.split(' ')[0] : 'Engineer';
-    
-    // We trigger it asynchronously to not block the request
-    sendActivationEmail(user.email, {
-      firstName,
-      totalDays,
-      company,
-      role,
-      prepDays: days.filter((d: any) => ['mini_interview', 'strength_confirmation', 'light_warmup'].includes(d.type)).length,
-      companyFocusDay: days.findIndex((d: any) => d.type === 'full_mock') + 1,
-      warmupDay: days.findIndex((d: any) => d.type === 'light_warmup') + 1,
-      interviewDate: interviewDate.toDateString(),
-    }).catch(err => console.error('Failed to send activation email:', err));
 
-    // Update email tracking
-    ritual.emails.activationSent = true;
-    ritual.emails.activationSentAt = new Date();
-    await ritual.save();
+    // 7. Fire off AI Generation in the background
+    (async () => {
+      try {
+        let updatedProfile = companyProfile;
+        if (needsCompanyProfileUpdate) {
+          const aiData = await generateCompanyIntelligence(company, role, track, experienceLevel);
+          if (updatedProfile) {
+            Object.assign(updatedProfile, aiData);
+            await updatedProfile.save();
+          } else {
+            updatedProfile = await CompanyProfile.create({
+              ...aiData,
+              name: company,
+              slug: companySlug,
+              tier: 'product',
+            });
+            await Ritual.findByIdAndUpdate(ritual._id, { companyProfile: updatedProfile._id });
+          }
+        }
+
+        const aiPlan = await generateRitualPlan(company, updatedProfile, role, track, experienceLevel, weakAreas, totalDays);
+        if (aiPlan && aiPlan.days && aiPlan.days.length === totalDays) {
+          const updatedDays = [];
+          for (let i = 0; i < totalDays; i++) {
+            const aiDayInfo = aiPlan.days[i];
+            updatedDays.push({
+              dayNumber: i + 1,
+              date: addDays(today, i + 1),
+              type: aiDayInfo.type,
+              focusTopic: aiDayInfo.focusTopic,
+              subTopics: aiDayInfo.subTopics,
+              questionCount: aiDayInfo.questionCount,
+              timeLimitMinutes: aiDayInfo.timeLimitMinutes,
+              estimatedMinutes: aiDayInfo.timeLimitMinutes || 15,
+            });
+          }
+          
+          const latestRitual = await Ritual.findById(ritual._id);
+          if (latestRitual && latestRitual.status === 'generating') {
+             latestRitual.days = updatedDays as any;
+             latestRitual.status = 'active'; // Mark as ready
+             
+             // Now that it's ready, send the email
+             sendActivationEmail(user.email, {
+                firstName,
+                totalDays,
+                company,
+                role,
+                prepDays: updatedDays.filter((d: any) => ['mini_interview', 'strength_confirmation', 'light_warmup'].includes(d.type)).length,
+                companyFocusDay: updatedDays.findIndex((d: any) => d.type === 'full_mock') + 1,
+                warmupDay: updatedDays.findIndex((d: any) => d.type === 'light_warmup') + 1,
+                interviewDate: interviewDate.toDateString(),
+              }).catch(err => console.error('Failed to send activation email:', err));
+
+             latestRitual.emails.activationSent = true;
+             latestRitual.emails.activationSentAt = new Date();
+             await latestRitual.save();
+          }
+        } else {
+          throw new Error('AI failed to generate a complete ritual plan');
+        }
+      } catch (err) {
+        console.error('Background AI generation failed for ritual:', ritual._id, err);
+        // Fallback if exception occurs
+        const latestRitual = await Ritual.findById(ritual._id);
+        if (latestRitual && latestRitual.status === 'generating') {
+           latestRitual.status = 'failed' as any;
+           await latestRitual.save();
+        }
+      }
+    })();
 
     return ritual;
   },

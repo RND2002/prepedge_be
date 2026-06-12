@@ -59,6 +59,7 @@ export interface IRitual extends Document {
     | 'game_day'      // interview is today
     | 'completed'     // interview passed, user debriefed
     | 'abandoned'     // user gave up
+    | 'generating'    // AI generating
     | 'expired';      // interview date passed with no debrief
   // Progress
   currentDay: number;
@@ -172,6 +173,7 @@ const RitualSchema = new Schema(
         'game_day', 
         'completed', 
         'abandoned', 
+        'generating',
         'expired'
       ],
       default: 'scheduled'

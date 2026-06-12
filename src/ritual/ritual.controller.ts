@@ -39,7 +39,7 @@ export const ritualController = {
       }
 
       const ritual = await RitualService.createRitual(userId, interviewDate, company, role, jobDescription);
-      return res.status(201).json({ success: true, data: ritual });
+      return res.status(202).json({ success: true, data: ritual });
     } catch (error: any) {
       console.error('Error creating ritual:', error);
       return res.status(500).json({ success: false, error: error.message || 'Internal server error' });
@@ -51,12 +51,16 @@ export const ritualController = {
       const userId = (req as any).user?.sub || (req as any).user?.id || (req as any).user?._id;
       if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
-      const ritual = await Ritual.findOne({ user: userId, status: { $in: ['active', 'game_day'] } })
+      const ritual = await Ritual.findOne({ user: userId, status: { $in: ['active', 'game_day', 'generating'] } })
         .populate('companyProfile');
 
 
       if (!ritual) {
         return res.status(404).json({ success: false, message: 'No active ritual found' });
+      }
+
+      if (ritual.status === 'generating') {
+        return res.status(200).json({ success: true, data: { status: 'generating' } });
       }
 
       const currentDay = ritual.days.find((d: any) => d.dayNumber === ritual.currentDay);

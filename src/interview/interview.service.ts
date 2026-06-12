@@ -171,11 +171,12 @@ const generateQuestionsBackground = async (sessionId: mongoose.Types.ObjectId, a
       status: 'in_progress',
       questions: sessionQuestions
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to generate questions:', error);
     await InterviewSession.findByIdAndUpdate(sessionId, {
-      status: 'abandoned',
-      abandonReason: 'system'
+      status: 'failed',
+      evaluationStatus: 'failed',
+      evaluationError: error.message || 'Generation failed'
     });
   }
 };
@@ -319,11 +320,12 @@ const generateRitualQuestionsBackground = async (
       status: 'in_progress',
       questions: sessionQuestions
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to generate ritual questions:', error);
     await InterviewSession.findByIdAndUpdate(sessionId, {
-      status: 'abandoned',
-      abandonReason: 'system'
+      status: 'failed',
+      evaluationStatus: 'failed',
+      evaluationError: error.message || 'Ritual generation failed'
     });
   }
 };

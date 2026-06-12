@@ -4,6 +4,13 @@ import * as interviewService from './interview.service';
 import { ErrorCodes, ErrorMessages } from '../lib/errors';
 import fs from 'fs';
 
+export enum EvaluationStatusResponse {
+  PROCESSING = 'processing',
+  IN_PROGRESS = 'in_progress',
+  COMPLETE = 'complete',
+  FAILED = 'failed'
+}
+
 export const startInterview = async (req: Request, res: Response) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -189,17 +196,17 @@ export const getStatus = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Not found' });
     }
 
-    if (session.status === 'questions_generated') {
-      return res.json({ status: session.status, evaluationStatus: 'processing', overallScore: null });
+    if (session.status === 'failed') {
+      return res.status(400).json({ status: session.status, evaluationStatus: EvaluationStatusResponse.FAILED, overallScore: null });
+    } else if (session.status === 'questions_generated' || session.status === 'evaluating' || session.status === 'submitted') {
+      return res.status(202).json({ status: session.status, evaluationStatus: EvaluationStatusResponse.PROCESSING, overallScore: null });
     } else if (session.status === 'in_progress') {
       // Done generating questions
-      return res.json({ status: session.status, evaluationStatus: 'in_progress', overallScore: null });
-    } else if (session.status === 'evaluating' || session.status === 'submitted') {
-      return res.json({ status: session.status, evaluationStatus: 'processing', overallScore: null });
+      return res.status(200).json({ status: session.status, evaluationStatus: EvaluationStatusResponse.IN_PROGRESS, overallScore: null });
     } else if (session.status === 'completed') {
-      return res.json({ status: session.status, evaluationStatus: 'complete', overallScore: session.results?.overallScore || null });
+      return res.status(200).json({ status: session.status, evaluationStatus: EvaluationStatusResponse.COMPLETE, overallScore: session.results?.overallScore || null });
     } else {
-      return res.json({ status: session.status, evaluationStatus: 'failed', overallScore: null });
+      return res.status(400).json({ status: session.status, evaluationStatus: EvaluationStatusResponse.FAILED, overallScore: null });
     }
   } catch (error: any) {
     console.error('Get Status Error:', error);
