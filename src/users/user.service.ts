@@ -9,7 +9,7 @@ export const findUserByEmail = async (email: string): Promise<IUser | null> => {
 };
 
 export const updateUser = async (userId: string, data: Partial<IUser>): Promise<IUser | null> => {
-  return await User.findByIdAndUpdate(userId, data, { new: true, runValidators: true });
+  return await User.findByIdAndUpdate(userId, data, { returnDocument: 'after', runValidators: true });
 };
 
 export const deleteUser = async (userId: string): Promise<IUser | null> => {

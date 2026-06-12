@@ -7,7 +7,7 @@ export interface IQuestion extends Document {
   topic: string;
   subTopic: string;
   difficulty: 'conceptual' | 'practical' | 'scenario' | 'debug' | 'tradeoff';
-  level: 'fresher' | 'junior' | 'mid' | 'senior';
+  level: string;
   timer: {
     writtenSeconds: number;
     spokenSeconds: number;
@@ -44,7 +44,6 @@ const QuestionSchema = new Schema(
     stack: { 
       type: String, 
       required: true,
-      enum: ['COLLEGE_FRESHER', 'MERN', 'MEAN', 'REACT', 'PYTHON', 'GOLANG', 'JAVA', 'MANUAL_TESTING', 'AUTOMATION_TESTING', 'DEVOPS', 'DATA_ANALYST', 'DATA_ENGINEER', 'REACT_NATIVE', 'FLUTTER', 'SPRING_BOOT', 'DJANGO', 'FASTAPI', 'SQL_FUNDAMENTALS', 'CYBER_SECURITY']
     },
     topic: { type: String, required: true },
     subTopic: { type: String, required: true },
@@ -56,7 +55,6 @@ const QuestionSchema = new Schema(
     level: {
       type: String,
       required: true,
-      enum: ['fresher', 'junior', 'mid', 'senior']
     },
     timer: {
       writtenSeconds: { type: Number, required: true },

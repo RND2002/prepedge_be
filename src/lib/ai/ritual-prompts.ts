@@ -10,11 +10,12 @@ CRITICAL INSTRUCTIONS:
 
 The output must exactly match the requested JSON schema.`;
 
-export const buildCompanyIntelligenceUserPrompt = (companyName: string, role: string, track: string, experienceLevel: string, liveContext: string) => {
+export const buildCompanyIntelligenceUserPrompt = (companyName: string, role: string, track: string, experienceLevel: string, liveContext: string, jobDescription?: string) => {
   let prompt = `Target Company: ${companyName}
 Target Role: ${role}
 Track: ${track}
 Experience Level: ${experienceLevel}
+${jobDescription ? `Job Description: ${jobDescription}` : ''}
 
 If the live search context is sparse or generic (often the case for smaller companies), heavily index on the user's Experience Level (${experienceLevel}) and Track (${track}) to infer the likely interview format, difficulty, and expected topics based on standard industry practices for similar companies. Do NOT hallucinate highly specific data if it does not exist; instead, adapt standard robust SWE interview patterns to the company's tier.
 
@@ -66,7 +67,8 @@ export const buildRitualPlannerUserPrompt = (
   track: string, 
   experienceLevel: string,
   weakAreas: string[], 
-  numDays: number
+  numDays: number,
+  jobDescription?: string
 ) => {
   return `Generate an interactive ${numDays}-day interview preparation plan.
 
@@ -74,6 +76,7 @@ Target Company: ${companyName}
 Target Role: ${role}
 Track: ${track}
 Experience Level: ${experienceLevel}
+${jobDescription ? `Job Description: ${jobDescription}` : ''}
 Number of Prep Days: ${numDays}-day interview preparation plan.
 
 Target Company: ${companyName}

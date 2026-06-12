@@ -15,6 +15,9 @@ export interface FrontendInterviewConfig {
   answerMode?: 'written' | 'spoken';
   timerEnabled: boolean;
   timerMode?: 'per_question' | 'total_session' | null;
+  focusTopics?: string[];
+  isRitual?: boolean;
+  dayNumber?: number;
 }
 
 export const startInterview = async (userId: string, frontendConfig: FrontendInterviewConfig) => {
@@ -24,11 +27,7 @@ export const startInterview = async (userId: string, frontendConfig: FrontendInt
     status: { $in: ['questions_generated', 'in_progress', 'submitted', 'evaluating'] }
   });
 
-  if (activeSession) {
-    const error: any = new Error('ACTIVE_SESSION_EXISTS');
-    error.activeSessionId = activeSession._id;
-    throw error;
-  }
+  // Moved ACTIVE_SESSION_EXISTS check down to accommodate ritual auto-abandon
 
   // Enforce max 2 interviews per day limit
   const todayStart = new Date();
@@ -62,10 +61,41 @@ export const startInterview = async (userId: string, frontendConfig: FrontendInt
   const Ritual = mongoose.model('Ritual');
   const activeRitual = await Ritual.findOne({ user: userId, status: { $in: ['active', 'game_day'] } });
 
+  if (frontendConfig.isRitual && activeRitual) {
+    const targetDayNumber = frontendConfig.dayNumber || activeRitual.currentDay;
+    const currentDay = activeRitual.days.find((d: any) => d.dayNumber === targetDayNumber);
+    if (currentDay && !currentDay.isCompleted) {
+      if (activeSession) {
+         if (activeSession.ritualDayNumber !== targetDayNumber) {
+            activeSession.status = 'abandoned';
+            activeSession.abandonReason = 'system' as any;
+            await activeSession.save();
+         } else {
+            const error: any = new Error('ACTIVE_SESSION_EXISTS');
+            error.activeSessionId = activeSession._id;
+            throw error;
+         }
+      }
+
+      // Delegate to ritual interview logic
+      return startRitualInterview(userId, activeRitual._id.toString(), currentDay.dayNumber, frontendConfig);
+    }
+  }
+
+  if (activeSession) {
+    const error: any = new Error('ACTIVE_SESSION_EXISTS');
+    error.activeSessionId = activeSession._id;
+    throw error;
+  }
+
   // Merge AI Config
+  const stack = frontendConfig.focusTopics && frontendConfig.focusTopics.length > 0 
+    ? frontendConfig.focusTopics.join(' with ') 
+    : onboarding.track;
+
   const aiConfig = {
     totalQuestions: frontendConfig.totalQuestions,
-    stack: onboarding.track,
+    stack,
     experienceLevel: onboarding.experienceLevel,
     targetRole: onboarding.targetRole,
     companyTarget: activeRitual ? activeRitual.company : (onboarding.targetCompanies?.join(', ') || 'Product companies'),
@@ -179,10 +209,14 @@ export const startRitualInterview = async (userId: string, ritualId: string, day
   const user = await User.findById(userId);
   const userName = onboarding.displayName || user?.name || undefined;
 
+  const stack = frontendConfig.focusTopics && frontendConfig.focusTopics.length > 0
+    ? frontendConfig.focusTopics.join(' with ')
+    : onboarding.track;
+
   const sessionConfig = {
     ...frontendConfig,
     totalQuestions: ritualDay.questionCount || 3,
-    stack: onboarding.track,
+    stack,
     experienceLevel: onboarding.experienceLevel,
     targetRole: onboarding.targetRole,
     companyTarget: `${ritual.company} Day ${dayNumber}`,
@@ -346,7 +380,7 @@ export const saveAnswer = async (userId: string, data: SaveAnswerPayload) => {
   const answer = await Answer.findOneAndUpdate(
     { sessionId: data.sessionId, questionId: data.questionId },
     { $set: answerData },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
 
   return answer;
@@ -415,7 +449,7 @@ const evaluateInterviewBackground = async (userId: string, sessionId: string) =>
         }
       }
     },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
 
   // Auto-complete active ritual day if applicable
@@ -434,18 +468,18 @@ const evaluateInterviewBackground = async (userId: string, sessionId: string) =>
           await RitualService.completeDay(activeRitual._id.toString(), session.ritualDayNumber, 'confident');
           
           // Sync new weak areas into Ritual state from this evaluation
+          const updateObj: any = {};
           if (evaluationResult.session.weakAreas && evaluationResult.session.weakAreas.length > 0) {
-            // Keep unique weak areas
-            const updatedWeakAreas = new Set([...activeRitual.weakAreasAtStart, ...evaluationResult.session.weakAreas]);
-            activeRitual.weakAreasAtStart = Array.from(updatedWeakAreas);
+            updateObj.weakAreasAtStart = { $each: evaluationResult.session.weakAreas };
           }
           
           if (evaluationResult.session.strongAreas && evaluationResult.session.strongAreas.length > 0) {
-            const updatedStrongAreas = new Set([...activeRitual.strongAreasAtStart, ...evaluationResult.session.strongAreas]);
-            activeRitual.strongAreasAtStart = Array.from(updatedStrongAreas);
+            updateObj.strongAreasAtStart = { $each: evaluationResult.session.strongAreas };
           }
           
-          await activeRitual.save();
+          if (Object.keys(updateObj).length > 0) {
+            await mongoose.model('Ritual').findByIdAndUpdate(activeRitual._id, { $addToSet: updateObj });
+          }
         }
       }
     }
@@ -614,7 +648,7 @@ export const getHistory = async (userId: string, page: number = 1, limit: number
       displayStatus,
       score: session.results?.overallScore || null,
       improvement: improvementStr,
-      stack: session.config.stack,
+      stack: session.ritualRef && session.config.companyTarget ? `${session.config.companyTarget} Ritual` : session.config.stack,
       questionsAnswered: Math.max((session.lastQuestionReached || 1) - 1, 0),
       totalQuestions: session.config.totalQuestions || session.questions.length,
       timeAgo: formatDistanceToNow(new Date(session.createdAt), { addSuffix: true }),

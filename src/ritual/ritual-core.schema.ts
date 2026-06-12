@@ -41,6 +41,7 @@ export interface IRitual extends Document {
   company: string;
   companyProfile?: mongoose.Types.ObjectId;
   role: string;
+  jobDescription?: string;
   track: string;
   experienceLevel: string;
   // Personalisation sources
@@ -150,6 +151,7 @@ const RitualSchema = new Schema(
       ref: 'CompanyProfile' 
     },
     role: { type: String, required: true },
+    jobDescription: { type: String },
     track: { type: String, required: true },
     experienceLevel: { type: String, required: true },
     onboardingRef: { 

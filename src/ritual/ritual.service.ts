@@ -12,7 +12,7 @@ export const RitualService = {
   /**
    * Register and create a new ritual
    */
-  async createRitual(userId: string, interviewDateStr: string, company: string, role: string) {
+  async createRitual(userId: string, interviewDateStr: string, company: string, role: string, jobDescription?: string) {
     const user = await User.findById(userId).populate('onboarding');
     if (!user) throw new Error('User not found');
 
@@ -37,7 +37,9 @@ export const RitualService = {
     // 1. Get Onboarding data
     const Onboarding = mongoose.model('Onboarding');
     const onboarding = await Onboarding.findOne({ user: userId });
-    const track = onboarding?.track || 'General SWE';
+    
+    let track = onboarding?.track || 'General SWE';
+
     const experienceLevel = onboarding?.experienceLevel || 'Entry Level';
 
     // 2. Fetch past sessions for weak areas (mocking extraction logic)
@@ -176,6 +178,7 @@ export const RitualService = {
       company,
       companyProfile: companyProfile._id,
       role,
+      jobDescription,
       track,
       experienceLevel,
       onboardingRef: onboarding?._id || new mongoose.Types.ObjectId(), // Provide a dummy if not exists just to avoid err

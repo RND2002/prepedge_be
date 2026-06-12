@@ -33,12 +33,12 @@ export const ritualController = {
       const userId = (req as any).user?.sub || (req as any).user?.id || (req as any).user?._id;
       if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
-      const { interviewDate, company, role } = req.body;
+      const { interviewDate, company, role, jobDescription } = req.body;
       if (!interviewDate || !company || !role) {
         return res.status(400).json({ success: false, error: 'Missing required fields' });
       }
 
-      const ritual = await RitualService.createRitual(userId, interviewDate, company, role);
+      const ritual = await RitualService.createRitual(userId, interviewDate, company, role, jobDescription);
       return res.status(201).json({ success: true, data: ritual });
     } catch (error: any) {
       console.error('Error creating ritual:', error);

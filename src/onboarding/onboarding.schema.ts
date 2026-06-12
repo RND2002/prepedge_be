@@ -11,14 +11,22 @@ const OnboardingSchema: Schema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
     displayName: { type: String, trim: true },
-    track: { type: String, enum: ONBOARDING_TRACKS },
-    experienceLevel: { type: String, enum: ['fresher', 'junior', 'mid', 'senior'] },
+    track: { type: String }, // relaxed for BC
+    primaryLanguage: [{ type: String }],
+    otherLanguage: { type: String },
+    frontendFramework: [{ type: String }],
+    otherFrontendFramework: { type: String },
+    backendFramework: [{ type: String }],
+    otherBackendFramework: { type: String },
+    database: [{ type: String }],
+    otherDatabase: { type: String },
+    experienceLevel: { type: String }, // relaxed
     experienceYears: { type: Number, min: 0, max: 20 },
-    targetRole: { type: String, enum: ONBOARDING_ROLES },
-    targetCompanies: [{ type: String, enum: ONBOARDING_COMPANIES }],
-    additionalSkills: [{ type: String, enum: ONBOARDING_SKILLS }],
-    interviewTimeline: { type: String, enum: INTERVIEW_TIMELINES, default: 'just_exploring' },
-    weeklyGoal: { type: String, enum: ['1-2', '3-4', 'daily'], default: '1-2' },
+    targetRole: { type: String }, // relaxed
+    targetCompanies: [{ type: String }], // relaxed
+    additionalSkills: [{ type: String }], // relaxed
+    interviewTimeline: { type: String, default: 'just_exploring' },
+    weeklyGoal: { type: String, default: '1-2' },
     currentStep: { type: Number, min: 1, max: 8, default: 1 },
     isComplete: { type: Boolean, default: false },
     completedAt: { type: Date, default: null },

@@ -28,7 +28,28 @@ export class OnboardingService {
     // Safely update onboarding object
     onboarding.set(payload);
 
-    if (payload.currentStep === 8) {
+    if (onboarding.primaryLanguage?.length || onboarding.otherLanguage) {
+      let langStr = (onboarding.primaryLanguage || []).join(', ');
+      if (onboarding.otherLanguage) langStr += (langStr ? ', ' : '') + onboarding.otherLanguage;
+      
+      const parts = [langStr || 'Other'];
+      
+      let feStr = (onboarding.frontendFramework || []).filter((x: string) => x !== 'Other' && x !== 'None').join(', ');
+      if (onboarding.otherFrontendFramework) feStr += (feStr ? ', ' : '') + onboarding.otherFrontendFramework;
+      if (feStr) parts.push(`Frontend: ${feStr}`);
+      
+      let beStr = (onboarding.backendFramework || []).filter((x: string) => x !== 'Other' && x !== 'None').join(', ');
+      if (onboarding.otherBackendFramework) beStr += (beStr ? ', ' : '') + onboarding.otherBackendFramework;
+      if (beStr) parts.push(`Backend: ${beStr}`);
+      
+      let dbStr = (onboarding.database || []).filter((x: string) => x !== 'Other' && x !== 'None').join(', ');
+      if (onboarding.otherDatabase) dbStr += (dbStr ? ', ' : '') + onboarding.otherDatabase;
+      if (dbStr) parts.push(`DB: ${dbStr}`);
+      
+      onboarding.track = parts.join(' | ');
+    }
+
+    if (payload.currentStep === 5) {
       onboarding.isComplete = true;
       onboarding.completedAt = new Date();
       
@@ -43,7 +64,7 @@ export class OnboardingService {
 
     await onboarding.save();
 
-    if (payload.currentStep === 8) {
+    if (payload.currentStep === 5) {
       return { onboarding, nextStep: '/dashboard' };
     }
 

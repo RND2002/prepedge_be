@@ -33,7 +33,7 @@ export type CompanyProfileAiData = z.infer<typeof CompanyProfileAiSchema>;
 /**
  * Generates the full company intelligence profile using Claude.
  */
-export const generateCompanyIntelligence = async (companyName: string, role: string, track: string, experienceLevel: string): Promise<CompanyProfileAiData> => {
+export const generateCompanyIntelligence = async (companyName: string, role: string, track: string, experienceLevel: string, jobDescription?: string): Promise<CompanyProfileAiData> => {
   try {
     const liveContext = await searchCompanyIntel(companyName, role);
 
@@ -41,7 +41,7 @@ export const generateCompanyIntelligence = async (companyName: string, role: str
       model: anthropic('claude-sonnet-4-6'),
       schema: CompanyProfileAiSchema,
       system: COMPANY_INTELLIGENCE_SYSTEM_PROMPT,
-      prompt: buildCompanyIntelligenceUserPrompt(companyName, role, track, experienceLevel, liveContext),
+      prompt: buildCompanyIntelligenceUserPrompt(companyName, role, track, experienceLevel, liveContext, jobDescription),
       temperature: 0.3, // Low temp for factual consistency
     });
 
@@ -89,14 +89,15 @@ export const generateRitualPlan = async (
   track: string, 
   experienceLevel: string,
   weakAreas: string[], 
-  numDays: number
+  numDays: number,
+  jobDescription?: string
 ): Promise<RitualPlanAiData> => {
   try {
     const { object } = await generateObject({
       model: anthropic('claude-sonnet-4-6'),
       schema: RitualPlanAiSchema,
       system: RITUAL_PLANNER_SYSTEM_PROMPT,
-      prompt: buildRitualPlannerUserPrompt(companyName, companyProfile, role, track, experienceLevel, weakAreas, numDays),
+      prompt: buildRitualPlannerUserPrompt(companyName, companyProfile, role, track, experienceLevel, weakAreas, numDays, jobDescription),
       temperature: 0.4,
     });
 

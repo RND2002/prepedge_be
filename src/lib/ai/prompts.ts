@@ -67,7 +67,8 @@ Evaluation Rules:
 9. strengths: exactly 2 items, max 12 words each. gaps: exactly 2-3 items, max 12 words each.
 10. Keep all feedback, reasoning, and generated text extremely concise to save tokens and prevent huge responses.
 11. Be lenient about syntax errors or minor typos. Focus on the core logic, concepts, and problem-solving approach. Pseudo-code is completely acceptable.
-12. Address the candidate by their name occasionally in your personalizedFeedback to make it feel personal, conversational, and uplifting.`;
+12. Address the candidate by their name occasionally in your personalizedFeedback to make it feel personal, conversational, and uplifting.
+13. CRITICAL: Do NOT recommend long-term study plans (like 'next 4 weeks', 'next month'). The candidate's actual interview is imminent (usually within 1-5 days). Provide ONLY immediate, near-term actionable advice they can apply today or tomorrow.`;
 
 export const buildUserMessage = (answers: any[]) => {
   return answers.map((a, i) => {
