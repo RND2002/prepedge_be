@@ -20,11 +20,18 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script_stop: true
           script: |
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            set -x
 
+            # Add pnpm global bin and PNPM_HOME to PATH
+            export PATH="/home/deploy/.npm-global/bin:$PATH"
             export PNPM_HOME="$HOME/.local/share/pnpm"
             export PATH="$PNPM_HOME:$PATH"
+
+            # Print versions to verify environment
+            echo "Environment setup:"
+            node -v
+            pnpm -v
+            pm2 -v
 
             cd /home/deploy/prepedge_be
 
