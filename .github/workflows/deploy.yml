@@ -1,0 +1,46 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    # Requires manual approval configured in the 'production' environment
+    environment: production
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true # Ensures deployment stops if build fails
+          script: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # Load nvm
+            
+            # Ensure pnpm is available in the PATH
+            export PNPM_HOME="/home/ec2-user/.local/share/pnpm"
+            export PATH="$PNPM_HOME:$PATH"
+            
+            cd /home/ec2-user/prepedge_be
+            
+            echo "Pulling latest code..."
+            git pull origin main
+            
+            echo "Installing dependencies..."
+            pnpm install --frozen-lockfile
+            
+            echo "Building the application..."
+            pnpm build
+            
+            echo "Restarting PM2..."
+            pm2 restart prepedge-api
+            
+            echo "Saving PM2 list..."
+            pm2 save

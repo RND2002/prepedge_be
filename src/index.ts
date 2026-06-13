@@ -31,6 +31,11 @@ app.use(cookieParser());
 // Trust proxy for rate limiter to get actual IP if behind reverse proxy
 app.set('trust proxy', 1);
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Routes
 app.use('/api/newsletter', rateLimiter, newsletterRouter);
 app.use('/api/auth', rateLimiter, authRouter);
