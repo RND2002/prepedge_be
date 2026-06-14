@@ -6,13 +6,42 @@ on:
       - main
 
 jobs:
-  deploy:
-    name: Deploy to EC2
+  build-and-deploy:
     runs-on: ubuntu-latest
-    environment: production #rr
+    environment: production
 
     steps:
-      - name: Deploy via SSH
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "dist/,package.json,pnpm-lock.yaml,ecosystem.config.js"
+          target: "/home/deploy/prepedge_be"
+
+      - name: Restart PM2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
@@ -20,32 +49,17 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script_stop: true
           script: |
-            set -x
-
-            # Add pnpm global bin and PNPM_HOME to PATH
             export PATH="/home/deploy/.npm-global/bin:$PATH"
             export PNPM_HOME="$HOME/.local/share/pnpm"
             export PATH="$PNPM_HOME:$PATH"
 
-            # Print versions to verify environment
-            echo "Environment setup:"
-            node -v
-            pnpm -v
-            pm2 -v
-
             cd /home/deploy/prepedge_be
 
-            echo "Pulling latest code..."
-            git pull origin main
+            echo "Installing production dependencies..."
+            pnpm install --prod --frozen-lockfile
 
-            echo "Installing dependencies..."
-            pnpm install --frozen-lockfile
-
-            echo "Building application..."
-            pnpm build
-
-            echo "Restarting PM2..."
-            pm2 restart prepedge-api || pm2 start ecosystem.config.js
+            echo "Reloading PM2..."
+            pm2 reload prepedge-api || pm2 start ecosystem.config.js
 
             echo "Saving PM2 process list..."
             pm2 save
