@@ -26,7 +26,7 @@ export const createOrder = async (userId: string, packageId: string) => {
     throw new Error('Invalid or inactive package');
   }
 
-  const finalAmountInPaise = pkg.priceInPaise > 0 ? pkg.priceInPaise - 100 : 0;
+  const finalAmountInPaise = pkg.priceInPaise;
 
   const orderOptions = {
     amount: finalAmountInPaise,
