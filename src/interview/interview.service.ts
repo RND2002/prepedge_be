@@ -437,6 +437,44 @@ const evaluateInterviewBackground = async (userId: string, sessionId: string) =>
   session.timing!.completedAt = new Date();
   await session.save();
 
+  // Deduct Credit
+  let shouldDeduct = true;
+  let deductReason = 'regular_interview';
+  if (session.config.companyTarget && !session.ritualRef) {
+    deductReason = 'company_interview';
+  }
+
+  if (session.ritualRef && session.ritualDayNumber) {
+    deductReason = `ritual_day_${session.ritualDayNumber}`;
+    const Ritual = mongoose.model('Ritual');
+    const activeRitual = await Ritual.findById(session.ritualRef);
+    if (activeRitual) {
+      const currentDay = activeRitual.days.find((d: any) => d.dayNumber === session.ritualDayNumber);
+      if (currentDay && (currentDay.type === 'none' || currentDay.type === 'game_day')) {
+        shouldDeduct = false;
+      }
+    }
+  }
+
+  if (shouldDeduct) {
+    const user = await User.findById(userId);
+    if (user && user.wallet && user.wallet.credits > 0) {
+      user.wallet.credits -= 1;
+      user.wallet.lifetimeCreditsSpent += 1;
+      await user.save();
+
+      const { CreditTransaction } = require('../payments/credit-transaction.schema');
+      await CreditTransaction.create({
+        userId: user._id,
+        type: 'spend',
+        amount: -1,
+        reason: deductReason,
+        relatedSessionId: session._id,
+        balanceAfter: user.wallet.credits
+      });
+    }
+  }
+
   // Update UserPerformance (Creating or Updating)
   await UserPerformance.findOneAndUpdate(
     { userId },

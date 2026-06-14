@@ -11,6 +11,8 @@ export enum EvaluationStatusResponse {
   FAILED = 'failed'
 }
 
+import { User } from '../users/user.schema';
+
 export const startInterview = async (req: Request, res: Response) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -20,6 +22,20 @@ export const startInterview = async (req: Request, res: Response) => {
 
   try {
     const userId = (req as any).user.sub;
+
+    const user = await User.findById(userId);
+    if (!user || !user.wallet || user.wallet.credits <= 0) {
+      return res.status(402).json({
+        success: false,
+        error: 'INSUFFICIENT_CREDITS',
+        message: "You've used your free interviews this month.",
+        wallet: {
+          credits: user?.wallet?.credits || 0,
+          freeCreditsRenewAt: user?.wallet?.freeCreditsRenewAt || null
+        }
+      });
+    }
+
     const session = await interviewService.startInterview(userId, req.body);
     res.status(202).json(session);
   } catch (error: any) {
@@ -56,6 +72,19 @@ export const startRitualInterview = async (req: Request, res: Response) => {
     
     if (!ritualId || typeof dayNumber !== 'number') {
       return res.status(400).json({ message: 'ritualId and dayNumber are required' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user || !user.wallet || user.wallet.credits <= 0) {
+      return res.status(402).json({
+        success: false,
+        error: 'INSUFFICIENT_CREDITS',
+        message: "You're out of credits to continue your ritual.",
+        wallet: {
+          credits: user?.wallet?.credits || 0,
+          freeCreditsRenewAt: user?.wallet?.freeCreditsRenewAt || null
+        }
+      });
     }
 
     const session = await interviewService.startRitualInterview(userId, ritualId, dayNumber, frontendConfig);

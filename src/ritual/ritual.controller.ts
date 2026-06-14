@@ -38,6 +38,20 @@ export const ritualController = {
         return res.status(400).json({ success: false, error: 'Missing required fields' });
       }
 
+      const User = require('../users/user.schema').User;
+      const user = await User.findById(userId);
+      if (!user || !user.wallet || user.wallet.credits <= 0) {
+        return res.status(402).json({
+          success: false,
+          error: 'INSUFFICIENT_CREDITS',
+          message: "You need credits to create a ritual.",
+          wallet: {
+            credits: user?.wallet?.credits || 0,
+            freeCreditsRenewAt: user?.wallet?.freeCreditsRenewAt || null
+          }
+        });
+      }
+
       const ritual = await RitualService.createRitual(userId, interviewDate, company, role, jobDescription);
       return res.status(202).json({ success: true, data: ritual });
     } catch (error: any) {
@@ -60,7 +74,7 @@ export const ritualController = {
       }
 
       if (ritual.status === 'generating') {
-        return res.status(200).json({ success: true, data: { status: 'generating' } });
+        return res.status(202).json({ success: true, data: { status: 'generating' } });
       }
 
       const currentDay = ritual.days.find((d: any) => d.dayNumber === ritual.currentDay);

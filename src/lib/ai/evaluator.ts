@@ -15,13 +15,14 @@ const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+const getModelName = () => process.env.NODE_ENV === 'local' ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-4-6';
 import { EvaluationResponseSchema, EvaluationResponse, QuestionGenerationSchema } from './schemas';
 import { buildSystemPrompt, buildUserMessage, buildQuestionGenerationSystemPrompt, AIQuestionGenConfig, AIEvaluationSessionConfig, AIBehaviorSummary } from './prompts';
 
 export const generateQuestionsWithAI = async (config: AIQuestionGenConfig, weakAreas: string[]) => {
   const { object } = await generateObject({
     // model: google('gemini-2.5-pro'),
-    model: anthropic('claude-sonnet-4-6'),
+    model: anthropic(getModelName()),
     schema: QuestionGenerationSchema,
     system: buildQuestionGenerationSystemPrompt(config, weakAreas),
     prompt: "Generate the interview questions now.",
@@ -41,7 +42,7 @@ export const evaluateSessionWithAI = async (
 
   const { object } = await generateObject({
     // model: google('gemini-2.5-pro'),
-    model: anthropic('claude-sonnet-4-6'),
+    model: anthropic(getModelName()),
     schema: EvaluationResponseSchema,
     system,
     prompt,

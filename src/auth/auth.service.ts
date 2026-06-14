@@ -8,6 +8,28 @@ import { UserModeration } from '../admin/admin.model';
 import * as emailService from '../lib/email';
 import { ErrorCodes } from '../lib/errors';
 import { trackReferral } from '../ambassador/ambassador.service';
+import { CreditTransaction } from '../payments/credit-transaction.schema';
+
+const initializeWalletIfMissing = async (user: IUser) => {
+  if (!user.wallet || typeof user.wallet.credits !== 'number') {
+    user.wallet = {
+      credits: 2,
+      freeCreditsRenewAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // + 30 days
+      lifetimeCreditsEarned: 2,
+      lifetimeCreditsSpent: 0
+    };
+    user.markModified('wallet');
+    await user.save();
+    
+    await CreditTransaction.create({
+      userId: user._id,
+      type: 'free_renewal',
+      amount: 2,
+      reason: 'signup_bonus',
+      balanceAfter: 2
+    });
+  }
+};
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -58,11 +80,25 @@ export const signup = async (data: any, ipAddress?: string, userAgent?: string) 
     email: data.email,
     password_hash,
     is_email_verified: false,
+    wallet: {
+      credits: 2,
+      freeCreditsRenewAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      lifetimeCreditsEarned: 2,
+      lifetimeCreditsSpent: 0
+    }
   };
 
 
 
   const user = await User.create(userPayload);
+
+  await CreditTransaction.create({
+    userId: user._id,
+    type: 'free_renewal',
+    amount: 2,
+    reason: 'signup_bonus',
+    balanceAfter: 2
+  });
 
   if (data.referralCode) {
     try {
@@ -141,6 +177,8 @@ export const login = async (data: any, ipAddress?: string, userAgent?: string) =
     throw new Error(ErrorCodes.INVALID_CREDENTIALS);
   }
 
+  await initializeWalletIfMissing(user);
+
   const tokens = await generateTokens(user, ipAddress, userAgent);
   const { password_hash: _, ...userWithoutPassword } = user.toObject();
 
@@ -165,6 +203,20 @@ export const googleAuth = async (idToken: string, ipAddress?: string, userAgent?
       google_id: payload.sub,
       avatar: payload.picture,
       is_email_verified: payload.email_verified,
+      wallet: {
+        credits: 2,
+        freeCreditsRenewAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        lifetimeCreditsEarned: 2,
+        lifetimeCreditsSpent: 0
+      }
+    });
+
+    await CreditTransaction.create({
+      userId: user._id,
+      type: 'free_renewal',
+      amount: 2,
+      reason: 'signup_bonus',
+      balanceAfter: 2
     });
 
     if (referralCode) {
@@ -183,6 +235,8 @@ export const googleAuth = async (idToken: string, ipAddress?: string, userAgent?
   if (moderation) {
     throw new Error('USER_SUSPENDED');
   }
+
+  await initializeWalletIfMissing(user);
 
   await user.populate('onboarding');
   const tokens = await generateTokens(user, ipAddress, userAgent);

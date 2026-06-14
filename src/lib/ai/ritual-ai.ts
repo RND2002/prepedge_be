@@ -9,6 +9,8 @@ const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+const getModelName = () => process.env.NODE_ENV === 'local' ? 'claude-3-haiku-20240307' : 'claude-3-5-sonnet-20241022';
+
 export const CompanyProfileAiSchema = z.object({
   name: z.string(),
   tier: z.enum(['faang', 'product', 'service', 'startup', 'finance']),
@@ -38,7 +40,7 @@ export const generateCompanyIntelligence = async (companyName: string, role: str
     const liveContext = await searchCompanyIntel(companyName, role);
 
     const { object } = await generateObject({
-      model: anthropic('claude-sonnet-4-6'),
+      model: anthropic(getModelName()),
       schema: CompanyProfileAiSchema,
       system: COMPANY_INTELLIGENCE_SYSTEM_PROMPT,
       prompt: buildCompanyIntelligenceUserPrompt(companyName, role, track, experienceLevel, liveContext, jobDescription),
@@ -58,7 +60,7 @@ export const generateCompanyIntelligence = async (companyName: string, role: str
 export const generateDailyPersonalization = async (companyName: string, focusTopic: string, track: string): Promise<string> => {
   try {
     const { text } = await generateText({
-      model: anthropic('claude-sonnet-4-6'),
+      model: anthropic(getModelName()),
       prompt: buildDailyEmailPersonalizationPrompt(companyName, focusTopic, track),
       temperature: 0.7,
     });
@@ -94,7 +96,7 @@ export const generateRitualPlan = async (
 ): Promise<RitualPlanAiData> => {
   try {
     const { object } = await generateObject({
-      model: anthropic('claude-sonnet-4-6'),
+      model: anthropic(getModelName()),
       schema: RitualPlanAiSchema,
       system: RITUAL_PLANNER_SYSTEM_PROMPT,
       prompt: buildRitualPlannerUserPrompt(companyName, companyProfile, role, track, experienceLevel, weakAreas, numDays, jobDescription),
@@ -120,7 +122,7 @@ export const generateRitualInterviewQuestions = async (
 ) => {
   try {
     const { object } = await generateObject({
-      model: anthropic('claude-sonnet-4-6'),
+      model: anthropic(getModelName()),
       schema: QuestionGenerationSchema,
       system: buildRitualInterviewQuestionsPrompt(companyName, companyProfile, role, track, dayType, questionCount, weakAreas, strongAreas),
       prompt: "Generate the interview questions for this ritual day now.",
@@ -143,7 +145,7 @@ export const GameDaySummarySchema = z.object({
 export const generateGameDaySummary = async (companyName: string, pastSessions: any[]) => {
   try {
     const { object } = await generateObject({
-      model: anthropic('claude-sonnet-4-6'),
+      model: anthropic(getModelName()),
       schema: GameDaySummarySchema,
       system: buildGameDaySummaryPrompt(companyName, pastSessions),
       prompt: "Generate the game day summary now.",

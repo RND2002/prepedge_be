@@ -17,6 +17,12 @@ export interface IUser extends Document {
     referredAt: Date;
     credited: boolean;
   };
+  wallet?: {
+    credits: number;
+    freeCreditsRenewAt: Date | null;
+    lifetimeCreditsEarned: number;
+    lifetimeCreditsSpent: number;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,6 +42,12 @@ const UserSchema: Schema = new Schema(
       referralCode: { type: String, default: null },
       referredAt: { type: Date, default: null },
       credited: { type: Boolean, default: false }
+    },
+    wallet: {
+      credits: { type: Number, default: 2 },
+      freeCreditsRenewAt: { type: Date, default: null },
+      lifetimeCreditsEarned: { type: Number, default: 2 },
+      lifetimeCreditsSpent: { type: Number, default: 0 }
     }
   },
   { timestamps: true }
