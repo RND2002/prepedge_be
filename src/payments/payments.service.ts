@@ -55,6 +55,8 @@ export const createOrder = async (userId: string, packageId: string) => {
   };
 };
 
+import { sendPaymentSuccessEmail } from '../lib/email';
+
 export const processSuccessfulPayment = async (
   paymentOrder: IPaymentOrder,
   razorpayPaymentId: string
@@ -96,6 +98,12 @@ export const processSuccessfulPayment = async (
     balanceAfter: user.wallet.credits,
   });
 
+  // Trigger the success email asynchronously
+  const amountPaidInRupees = paymentOrder.amountInPaise / 100;
+  sendPaymentSuccessEmail(user.email, pkg.displayName || pkg.name, amountPaidInRupees, paymentOrder.razorpayOrderId).catch(err => {
+    console.error('Failed to trigger payment success email:', err);
+  });
+
   return {
     alreadyProcessed: false,
     newBalance: user.wallet.credits,
@@ -118,7 +126,12 @@ export const verifyPaymentSignature = (
 };
 
 export const verifyWebhookSignature = (payload: string, signature: string) => {
-  const secret = (process.env.RAZORPAY_WEBHOOK_SECRET) as string;
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  if (!secret) {
+    console.error('❌ CRITICAL: RAZORPAY_WEBHOOK_SECRET is missing from environment variables!');
+    return false;
+  }
+  
   const generated = crypto
     .createHmac('sha256', secret)
     .update(payload)

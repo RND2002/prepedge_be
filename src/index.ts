@@ -26,9 +26,9 @@ const app = express();
 app.use(helmet());
 app.use(cors({ origin: [process.env.FRONTEND_URL as string, 'https://release-prepedge.netlify.app', 'http://localhost:3000'], credentials: true }));
 
-// Body parser with 1mb limit
+// Body parser with 50mb limit for audio uploads
 app.use(express.json({ 
-  limit: '1mb',
+  limit: '50mb',
   verify: (req: any, res, buf) => {
     req.rawBody = buf;
   }
