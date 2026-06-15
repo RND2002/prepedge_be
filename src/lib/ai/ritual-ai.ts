@@ -9,7 +9,7 @@ const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const getModelName = () => process.env.NODE_ENV === 'local' ? 'claude-3-haiku-20240307' : 'claude-3-5-sonnet-20241022';
+const getModelName = () => process.env.NODE_ENV === 'local' ? 'claude-sonnet-4-6' : 'claude-3-5-sonnet-20241022';
 
 export const CompanyProfileAiSchema = z.object({
   name: z.string(),
@@ -45,6 +45,7 @@ export const generateCompanyIntelligence = async (companyName: string, role: str
       system: COMPANY_INTELLIGENCE_SYSTEM_PROMPT,
       prompt: buildCompanyIntelligenceUserPrompt(companyName, role, track, experienceLevel, liveContext, jobDescription),
       temperature: 0.3, // Low temp for factual consistency
+      abortSignal: AbortSignal.timeout(120000),
     });
 
     return object;
@@ -85,12 +86,12 @@ export const RitualPlanAiSchema = z.object({
 export type RitualPlanAiData = z.infer<typeof RitualPlanAiSchema>;
 
 export const generateRitualPlan = async (
-  companyName: string, 
-  companyProfile: any, 
-  role: string, 
-  track: string, 
+  companyName: string,
+  companyProfile: any,
+  role: string,
+  track: string,
   experienceLevel: string,
-  weakAreas: string[], 
+  weakAreas: string[],
   numDays: number,
   jobDescription?: string
 ): Promise<RitualPlanAiData> => {
@@ -101,6 +102,7 @@ export const generateRitualPlan = async (
       system: RITUAL_PLANNER_SYSTEM_PROMPT,
       prompt: buildRitualPlannerUserPrompt(companyName, companyProfile, role, track, experienceLevel, weakAreas, numDays, jobDescription),
       temperature: 0.4,
+      abortSignal: AbortSignal.timeout(120000),
     });
 
     return object;
@@ -111,13 +113,13 @@ export const generateRitualPlan = async (
 };
 
 export const generateRitualInterviewQuestions = async (
-  companyName: string, 
-  companyProfile: any, 
-  role: string, 
-  track: string, 
-  dayType: string, 
-  questionCount: number, 
-  weakAreas: string[], 
+  companyName: string,
+  companyProfile: any,
+  role: string,
+  track: string,
+  dayType: string,
+  questionCount: number,
+  weakAreas: string[],
   strongAreas: string[]
 ) => {
   try {
@@ -127,6 +129,7 @@ export const generateRitualInterviewQuestions = async (
       system: buildRitualInterviewQuestionsPrompt(companyName, companyProfile, role, track, dayType, questionCount, weakAreas, strongAreas),
       prompt: "Generate the interview questions for this ritual day now.",
       temperature: 0.5,
+      abortSignal: AbortSignal.timeout(120000),
     });
 
     return object.questions;
@@ -150,6 +153,7 @@ export const generateGameDaySummary = async (companyName: string, pastSessions: 
       system: buildGameDaySummaryPrompt(companyName, pastSessions),
       prompt: "Generate the game day summary now.",
       temperature: 0.4,
+      abortSignal: AbortSignal.timeout(120000),
     });
     return object;
   } catch (error) {

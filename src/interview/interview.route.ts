@@ -5,6 +5,9 @@ import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
 
+// Public route for shareable scorecard
+router.get('/public-results/:sessionId', interviewController.getPublicScorecard);
+
 // Protect all interview routes
 router.use(authenticate);
 

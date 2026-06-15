@@ -12,6 +12,7 @@ export enum EvaluationStatusResponse {
 }
 
 import { User } from '../users/user.schema';
+import { InterviewSession } from './interview-session.schema';
 
 export const startInterview = async (req: Request, res: Response) => {
   const errors = validationResult(req);
@@ -69,7 +70,7 @@ export const startRitualInterview = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.sub;
     const { ritualId, dayNumber, ...frontendConfig } = req.body;
-    
+
     if (!ritualId || typeof dayNumber !== 'number') {
       return res.status(400).json({ message: 'ritualId and dayNumber are required' });
     }
@@ -131,9 +132,9 @@ export const submitInterview = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.sub;
     const { sessionId } = req.body;
-    
+
     const result = await interviewService.submitInterview(userId, sessionId);
-    
+
     res.status(202).json({ message: 'Evaluation started', session: result });
   } catch (error: any) {
     console.error('Submit Interview Error:', error);
@@ -218,15 +219,20 @@ export const getStatus = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.sub;
     const sessionId = req.params.sessionId as string;
-    
+
     const { session } = await interviewService.getSessionResults(userId, sessionId);
-    
+
     if (!session) {
       return res.status(404).json({ error: 'Not found' });
     }
 
-    if (session.status === 'failed') {
-      return res.status(400).json({ status: session.status, evaluationStatus: EvaluationStatusResponse.FAILED, overallScore: null });
+    if (session.status === 'failed' || session.evaluationStatus === 'failed') {
+      return res.status(400).json({
+        status: 'failed',
+        evaluationStatus: EvaluationStatusResponse.FAILED,
+        overallScore: null,
+        evaluationError: session.evaluationError
+      });
     } else if (session.status === 'questions_generated' || session.status === 'evaluating' || session.status === 'submitted') {
       return res.status(202).json({ status: session.status, evaluationStatus: EvaluationStatusResponse.PROCESSING, overallScore: null });
     } else if (session.status === 'in_progress') {
@@ -239,6 +245,34 @@ export const getStatus = async (req: Request, res: Response) => {
     }
   } catch (error: any) {
     console.error('Get Status Error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+export const getPublicScorecard = async (req: Request, res: Response) => {
+  try {
+    const sessionId = req.params.sessionId as string;
+    const session = await InterviewSession.findById(sessionId).select('config.stack config.userName results.overallScore results.verdict results.strongAreas results.weakAreas results.comparedToSimilarUsers.userRank');
+
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    if (!session.results || typeof session.results.overallScore !== 'number' || session.results.overallScore < 5) {
+      return res.status(403).json({ error: 'Scorecard not available' });
+    }
+
+    res.status(200).json({
+      score: session.results.overallScore,
+      verdict: session.results.verdict,
+      strongAreas: session.results.strongAreas,
+      weakAreas: session.results.weakAreas,
+      userRank: session.results.comparedToSimilarUsers?.userRank,
+      stack: session.config.stack,
+      userName: session.config.userName || 'Developer'
+    });
+  } catch (error: any) {
+    console.error('Get Public Scorecard Error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };

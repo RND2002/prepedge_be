@@ -171,7 +171,12 @@ export const dashboardService = {
       },
       radarData,
       trendData,
-      vulnerabilities
+      vulnerabilities,
+      latestSession: completedSessions.length > 0 ? {
+        id: completedSessions[completedSessions.length - 1]._id,
+        score: currentScore,
+        stack: completedSessions[completedSessions.length - 1].config?.stack || 'General'
+      } : null
     };
   },
 

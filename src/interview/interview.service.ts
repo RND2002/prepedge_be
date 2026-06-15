@@ -122,13 +122,15 @@ export const startInterview = async (userId: string, frontendConfig: FrontendInt
     }
   });
 
-  // Run in background
-  generateQuestionsBackground(session._id, aiConfig, weakAreas).catch(console.error);
+  // Run asynchronously in background
+  generateQuestionsAsync(session._id, aiConfig, weakAreas).catch(err => {
+    console.error('Background question generation failed:', err);
+  });
 
-  return session;
+  return await InterviewSession.findById(session._id);
 };
 
-const generateQuestionsBackground = async (sessionId: mongoose.Types.ObjectId, aiConfig: any, weakAreas: any) => {
+const generateQuestionsAsync = async (sessionId: mongoose.Types.ObjectId, aiConfig: any, weakAreas: any) => {
   try {
     const generatedQ = await generateQuestionsWithAI(aiConfig, weakAreas);
 
@@ -178,6 +180,7 @@ const generateQuestionsBackground = async (sessionId: mongoose.Types.ObjectId, a
       evaluationStatus: 'failed',
       evaluationError: error.message || 'Generation failed'
     });
+    throw error;
   }
 };
 
@@ -247,19 +250,21 @@ export const startRitualInterview = async (userId: string, ritualId: string, day
   ritualDay.interviewSessionId = session._id as mongoose.Types.ObjectId;
   await ritual.save();
 
-  generateRitualQuestionsBackground(
+  generateRitualQuestionsAsync(
     session._id as mongoose.Types.ObjectId, 
     sessionConfig, 
     ritual, 
     ritualDay, 
     weakAreas, 
     strongAreas
-  ).catch(console.error);
+  ).catch(err => {
+    console.error('Background ritual question generation failed:', err);
+  });
 
-  return session;
+  return await InterviewSession.findById(session._id);
 };
 
-const generateRitualQuestionsBackground = async (
+const generateRitualQuestionsAsync = async (
   sessionId: mongoose.Types.ObjectId, 
   config: any, 
   ritual: any, 
@@ -327,6 +332,7 @@ const generateRitualQuestionsBackground = async (
       evaluationStatus: 'failed',
       evaluationError: error.message || 'Ritual generation failed'
     });
+    throw error;
   }
 };
 
@@ -397,13 +403,15 @@ export const submitInterview = async (userId: string, sessionId: string) => {
   session.timing!.evaluationStartedAt = new Date();
   await session.save();
 
-  // Run in background
-  evaluateInterviewBackground(userId, sessionId).catch(console.error);
+  // Run asynchronously in background
+  evaluateInterviewAsync(userId, sessionId).catch(err => {
+    console.error('Background evaluation failed:', err);
+  });
 
-  return session;
+  return await InterviewSession.findById(sessionId);
 };
 
-const evaluateInterviewBackground = async (userId: string, sessionId: string) => {
+const evaluateInterviewAsync = async (userId: string, sessionId: string) => {
   try {
     const session = await InterviewSession.findById(sessionId);
     if (!session) return;
@@ -531,6 +539,7 @@ const evaluateInterviewBackground = async (userId: string, sessionId: string) =>
     await InterviewSession.findByIdAndUpdate(sessionId, {
       evaluationStatus: 'failed'
     });
+    throw error;
   }
 };
 

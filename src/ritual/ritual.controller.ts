@@ -65,12 +65,17 @@ export const ritualController = {
       const userId = (req as any).user?.sub || (req as any).user?.id || (req as any).user?._id;
       if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
-      const ritual = await Ritual.findOne({ user: userId, status: { $in: ['active', 'game_day', 'generating'] } })
+      const ritual = await Ritual.findOne({ user: userId, status: { $in: ['active', 'game_day', 'generating', 'failed'] } })
+        .sort({ createdAt: -1 })
         .populate('companyProfile');
 
 
       if (!ritual) {
         return res.status(404).json({ success: false, message: 'No active ritual found' });
+      }
+
+      if (ritual.status === 'failed') {
+        return res.status(400).json({ success: false, message: 'Ritual generation failed' });
       }
 
       if (ritual.status === 'generating') {

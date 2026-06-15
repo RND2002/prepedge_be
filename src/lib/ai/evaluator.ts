@@ -3,19 +3,13 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAnthropic } from '@ai-sdk/anthropic';
 
-const openrouter = createOpenRouter({
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
 
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
 
 const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const getModelName = () => process.env.NODE_ENV === 'local' ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-4-6';
+const getModelName = () => process.env.NODE_ENV === 'local' ? 'claude-sonnet-4-6' : 'claude-sonnet-4-6';
 import { EvaluationResponseSchema, EvaluationResponse, QuestionGenerationSchema } from './schemas';
 import { buildSystemPrompt, buildUserMessage, buildQuestionGenerationSystemPrompt, AIQuestionGenConfig, AIEvaluationSessionConfig, AIBehaviorSummary } from './prompts';
 
@@ -27,7 +21,7 @@ export const generateQuestionsWithAI = async (config: AIQuestionGenConfig, weakA
     system: buildQuestionGenerationSystemPrompt(config, weakAreas),
     prompt: "Generate the interview questions now.",
     temperature: 0.7, // Higher temp for varied question generation
-
+    abortSignal: AbortSignal.timeout(120000),
   });
   return object.questions;
 };
@@ -47,6 +41,7 @@ export const evaluateSessionWithAI = async (
     system,
     prompt,
     temperature: 0.2, // Low temperature for consistent grading
+    abortSignal: AbortSignal.timeout(120000),
   });
 
   return object;
