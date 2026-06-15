@@ -9,7 +9,7 @@ const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const getModelName = () => process.env.NODE_ENV === 'local' ? 'claude-sonnet-4-6' : 'claude-3-5-sonnet-20241022';
+const getModelName = () => process.env.NODE_ENV === 'local' ? 'claude-sonnet-4-6' : 'claude-sonnet-4-6';
 
 export const CompanyProfileAiSchema = z.object({
   name: z.string(),
