@@ -132,41 +132,73 @@ export const startInterview = async (userId: string, frontendConfig: FrontendInt
 
 const generateQuestionsAsync = async (sessionId: mongoose.Types.ObjectId, aiConfig: any, weakAreas: any) => {
   try {
-    const generatedQ = await generateQuestionsWithAI(aiConfig, weakAreas);
+    let questionDocs;
 
-    const questionDocs = await Promise.all(generatedQ.map(q => {
-      return Question.create({
-        text: q.text,
-        stack: aiConfig.stack,
-        topic: q.topic,
-        subTopic: q.subTopic,
-        difficulty: q.difficulty,
-        level: aiConfig.experienceLevel,
-        timer: {
-          writtenSeconds: q.timerAllotted,
-          spokenSeconds: q.timerAllotted,
-          minimumSeconds: Math.floor(q.timerAllotted * 0.3)
-        },
-        evaluationGuide: {
-          mustCover: q.mustCover,
-          shouldCover: [],
-          bonusIfMentions: [],
-          redFlags: [],
-          idealAnswerFull: q.idealAnswerFull
-        },
-        interviewerPerspective: q.interviewerPerspective,
-        createdBy: 'system'
-      });
-    }));
+    if (process.env.NODE_ENV === 'local') {
+      const limit = aiConfig.totalQuestions || 5;
+      const matchQuery: any = { isActive: true };
+      
+      if (aiConfig.stack) {
+        matchQuery.stack = { $regex: new RegExp(aiConfig.stack, 'i') };
+      }
+      
+      if (aiConfig.experienceLevel) {
+        matchQuery.level = { $regex: new RegExp(aiConfig.experienceLevel, 'i') };
+      }
 
-    const sessionQuestions = questionDocs.map((doc, idx) => ({
+      if (weakAreas && weakAreas.length > 0) {
+        matchQuery.topic = { $in: weakAreas.map((w: string) => new RegExp(w, 'i')) };
+      }
+
+      questionDocs = await Question.aggregate([
+        { $match: matchQuery },
+        { $sample: { size: limit } }
+      ]);
+
+      if (questionDocs.length < limit) {
+        const fallbackDocs = await Question.aggregate([
+          { $match: { isActive: true } },
+          { $sample: { size: limit } }
+        ]);
+        questionDocs = fallbackDocs;
+      }
+    } else {
+      const generatedQ = await generateQuestionsWithAI(aiConfig, weakAreas);
+
+      questionDocs = await Promise.all(generatedQ.map(q => {
+        return Question.create({
+          text: q.text,
+          stack: aiConfig.stack,
+          topic: q.topic,
+          subTopic: q.subTopic,
+          difficulty: q.difficulty,
+          level: aiConfig.experienceLevel,
+          timer: {
+            writtenSeconds: q.timerAllotted,
+            spokenSeconds: q.timerAllotted,
+            minimumSeconds: Math.floor(q.timerAllotted * 0.3)
+          },
+          evaluationGuide: {
+            mustCover: q.mustCover,
+            shouldCover: [],
+            bonusIfMentions: [],
+            redFlags: [],
+            idealAnswerFull: q.idealAnswerFull
+          },
+          interviewerPerspective: q.interviewerPerspective,
+          createdBy: 'system'
+        });
+      }));
+    }
+
+    const sessionQuestions = questionDocs.map((doc: any, idx: number) => ({
       questionId: doc._id,
       questionText: doc.text,
       topic: doc.topic,
       subTopic: doc.subTopic,
       difficulty: doc.difficulty,
       sequenceNumber: idx + 1,
-      timerAllotted: doc.timer.writtenSeconds
+      timerAllotted: doc.timer?.writtenSeconds || 180
     }));
 
     await InterviewSession.findByIdAndUpdate(sessionId, {
@@ -273,52 +305,84 @@ const generateRitualQuestionsAsync = async (
   strongAreas: string[]
 ) => {
   try {
-    const generatedQ = await generateRitualInterviewQuestions(
-      ritual.company,
-      ritual.companyProfile,
-      config.targetRole,
-      config.stack,
-      ritualDay.type,
-      config.totalQuestions,
-      weakAreas,
-      strongAreas
-    );
+    let questionDocs;
 
-    const questionDocs = await Promise.all(generatedQ.map((q: any) => {
-      const allottedSeconds = ritualDay.type === 'light_warmup' ? 0 : (q.timerAllotted || 180);
+    if (process.env.NODE_ENV === 'local') {
+      const limit = config.totalQuestions || 5;
+      const matchQuery: any = { isActive: true };
       
-      return Question.create({
-        text: q.text,
-        stack: config.stack,
-        topic: q.topic,
-        subTopic: q.subTopic,
-        difficulty: q.difficulty,
-        level: config.experienceLevel,
-        timer: {
-          writtenSeconds: allottedSeconds,
-          spokenSeconds: allottedSeconds,
-          minimumSeconds: Math.floor(allottedSeconds * 0.3)
-        },
-        evaluationGuide: {
-          mustCover: q.mustCover,
-          shouldCover: [],
-          bonusIfMentions: [],
-          redFlags: [],
-          idealAnswerFull: q.idealAnswerFull
-        },
-        interviewerPerspective: q.interviewerPerspective,
-        createdBy: 'system'
-      });
-    }));
+      if (config.stack) {
+        matchQuery.stack = { $regex: new RegExp(config.stack, 'i') };
+      }
+      
+      if (config.experienceLevel) {
+        matchQuery.level = { $regex: new RegExp(config.experienceLevel, 'i') };
+      }
 
-    const sessionQuestions = questionDocs.map((doc, idx) => ({
+      if (weakAreas && weakAreas.length > 0) {
+        matchQuery.topic = { $in: weakAreas.map((w: string) => new RegExp(w, 'i')) };
+      }
+
+      questionDocs = await Question.aggregate([
+        { $match: matchQuery },
+        { $sample: { size: limit } }
+      ]);
+
+      if (questionDocs.length < limit) {
+        const fallbackDocs = await Question.aggregate([
+          { $match: { isActive: true } },
+          { $sample: { size: limit } }
+        ]);
+        questionDocs = fallbackDocs;
+      }
+    } else {
+      const generatedQ = await generateRitualInterviewQuestions(
+        ritual.company,
+        ritual.companyProfile,
+        config.targetRole,
+        config.stack,
+        ritualDay.type,
+        config.totalQuestions,
+        weakAreas,
+        strongAreas
+      );
+
+      questionDocs = await Promise.all(generatedQ.map((q: any) => {
+        const allottedSeconds = ritualDay.type === 'light_warmup' ? 0 : (q.timerAllotted || 180);
+        
+        return Question.create({
+          text: q.text,
+          stack: config.stack,
+          topic: q.topic,
+          subTopic: q.subTopic,
+          difficulty: q.difficulty,
+          level: config.experienceLevel,
+          timer: {
+            writtenSeconds: allottedSeconds,
+            spokenSeconds: allottedSeconds,
+            minimumSeconds: Math.floor(allottedSeconds * 0.3)
+          },
+          evaluationGuide: {
+            mustCover: q.mustCover,
+            shouldCover: [],
+            bonusIfMentions: [],
+            redFlags: [],
+            idealAnswerFull: q.idealAnswerFull
+          },
+          interviewerPerspective: q.interviewerPerspective,
+          createdBy: 'system'
+        });
+      }));
+    }
+
+    const sessionQuestions = questionDocs.map((doc: any, idx: number) => ({
       questionId: doc._id,
       questionText: doc.text,
       topic: doc.topic,
       subTopic: doc.subTopic,
       difficulty: doc.difficulty,
       sequenceNumber: idx + 1,
-      timerAllotted: doc.timer.writtenSeconds
+      timerAllotted: doc.timer?.writtenSeconds || 180
     }));
 
     await InterviewSession.findByIdAndUpdate(sessionId, {
