@@ -85,4 +85,16 @@ router.post(
   adminController.resetAdminPassword
 );
 
+// Bulk Email API
+router.post(
+  '/bulk-email',
+  [
+    body('fromEmail').isEmail().withMessage('Please enter a valid from email'),
+    body('subject').notEmpty().withMessage('Subject is required'),
+    body('bodyHtml').notEmpty().withMessage('Email body is required'),
+    body('userIds').isArray({ min: 1 }).withMessage('userIds must be a non-empty array')
+  ],
+  adminController.sendBulkEmailController
+);
+
 export default router;

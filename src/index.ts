@@ -19,6 +19,7 @@ import { seedDefaultAdmin } from './admin/admin.service';
 import { startStaleSessionCronJob } from './jobs/expireStaleSessions';
 import { startRitualCronJobs } from './jobs/ritualCron';
 import { startFreeCreditsCronJob } from './jobs/renewFreeCredits';
+import { startUpsellCronJob } from './jobs/upsellCron';
 
 const app = express();
 
@@ -74,6 +75,7 @@ const startServer = async () => {
   startStaleSessionCronJob();
   startRitualCronJobs();
   startFreeCreditsCronJob();
+  startUpsellCronJob();
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);

@@ -265,3 +265,17 @@ export const resetAdminPassword = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export const sendBulkEmailController = async (req: Request, res: Response) => {
+  try {
+    const { fromEmail, subject, bodyHtml, userIds } = req.body;
+    const result = await adminService.sendBulkEmail(fromEmail, subject, bodyHtml, userIds);
+    res.json(result);
+  } catch (error: any) {
+    console.error('Bulk Email error:', error);
+    if (error.message === 'NO_USERS_PROVIDED' || error.message === 'NO_VALID_EMAILS_FOUND') {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

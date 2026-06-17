@@ -23,6 +23,7 @@ export interface IUser extends Document {
     lifetimeCreditsEarned: number;
     lifetimeCreditsSpent: number;
   };
+  upsellEmailSentAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,7 +49,8 @@ const UserSchema: Schema = new Schema(
       freeCreditsRenewAt: { type: Date, default: null },
       lifetimeCreditsEarned: { type: Number, default: 2 },
       lifetimeCreditsSpent: { type: Number, default: 0 }
-    }
+    },
+    upsellEmailSentAt: { type: Date, default: null }
   },
   { timestamps: true }
 );

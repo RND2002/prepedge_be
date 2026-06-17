@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { sendCustomEmail } from '../lib/email';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import mongoose from 'mongoose';
@@ -329,7 +330,7 @@ export const getUsersList = async (query: any) => {
   }
 
   const total = await User.countDocuments(matchCriteria);
-  const users = await User.find(matchCriteria, 'name email createdAt avatar')
+  const users = await User.find(matchCriteria, 'name email createdAt avatar wallet')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
@@ -356,7 +357,8 @@ export const getUsersList = async (query: any) => {
         avatar: user.avatar,
         isSuspended,
         interviewCount,
-        avgScore
+        avgScore,
+        credits: user.wallet?.credits || 0
       };
     })
   );
@@ -684,4 +686,25 @@ export const resetAdminPassword = async (adminId: string, targetId: string, data
   await writeAuditLog(adminId, 'Admin Password Reset', 'Admin', targetId);
 
   return { message: 'Password reset successfully' };
+};
+
+export const sendBulkEmail = async (fromEmail: string, subject: string, bodyHtml: string, userIds: string[]) => {
+  if (!userIds || userIds.length === 0) {
+    throw new Error('NO_USERS_PROVIDED');
+  }
+
+  const users = await User.find({ _id: { $in: userIds } }, 'email');
+  const emails = users.map(u => u.email).filter(e => !!e);
+
+  if (emails.length === 0) {
+    throw new Error('NO_VALID_EMAILS_FOUND');
+  }
+
+  // Send individually to protect privacy
+  const promises = emails.map(email => sendCustomEmail(fromEmail, [email], subject, bodyHtml));
+  const results = await Promise.all(promises);
+
+  const successful = results.filter(r => r.success).length;
+
+  return { success: true, count: successful, total: emails.length };
 };

@@ -154,3 +154,103 @@ export const sendPaymentSuccessEmail = async (email: string, packageName: string
     console.error('Failed to send payment success email:', error);
   }
 };
+
+export const sendUpsellEmail = async (email: string, firstName: string) => {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: `PrepEdge <${fromEmail}>`,
+      to: [email],
+      subject: "Your next interview won't wait.",
+      text: `Hey ${firstName},
+
+You've already completed your free interviews on PrepEdge.
+
+By now, you've seen the difference between generic practice and feedback that actually tells you:
+- What you explained well.
+- Where you struggled.
+- Which concepts you're missing.
+- How an interviewer would evaluate your answer.
+
+Most developers stop when things start getting uncomfortable.
+The ones who get offers keep practicing.
+
+Your next interview session is waiting, and a few more focused rounds can make the difference between "almost ready" and "confident on interview day."
+
+Why developers upgrade
+✅ More mock interviews whenever you need them
+✅ Detailed answer-by-answer feedback
+✅ Practice at your own pace
+✅ Credits that never expire
+
+Invest in your preparation today and walk into your next interview knowing you're ready.
+
+Upgrade Now: https://prepedge.online/billing
+
+Prepedge Team
+prepedge.online`,
+      html: `
+        <p>Hey ${firstName},</p>
+        <p>You've already completed your free interviews on PrepEdge.</p>
+        
+        <p>By now, you've seen the difference between generic practice and feedback that actually tells you:</p>
+        <ul>
+          <li>What you explained well.</li>
+          <li>Where you struggled.</li>
+          <li>Which concepts you're missing.</li>
+          <li>How an interviewer would evaluate your answer.</li>
+        </ul>
+
+        <p>Most developers stop when things start getting uncomfortable.</p>
+        <p><strong>The ones who get offers keep practicing.</strong></p>
+
+        <p>Your next interview session is waiting, and a few more focused rounds can make the difference between "almost ready" and "confident on interview day."</p>
+
+        <p><strong>Why developers upgrade</strong></p>
+        <ul style="list-style-type: none; padding-left: 0;">
+          <li>✅ More mock interviews whenever you need them</li>
+          <li>✅ Detailed answer-by-answer feedback</li>
+          <li>✅ Practice at your own pace</li>
+          <li>✅ Credits that never expire</li>
+        </ul>
+
+        <p>Invest in your preparation today and walk into your next interview knowing you're ready.</p>
+
+        <p><a href="https://prepedge.online/billing">Upgrade Now</a></p>
+
+        <p>
+          Prepedge Team<br>
+          <a href="https://prepedge.online">prepedge.online</a>
+        </p>
+      `,
+    });
+
+    if (error) {
+      console.error('Error sending upsell email:', error);
+    } else {
+      console.log('Upsell email sent:', data);
+    }
+  } catch (error) {
+    console.error('Failed to send upsell email:', error);
+  }
+};
+
+export const sendCustomEmail = async (fromEmail: string, toEmails: string[], subject: string, html: string) => {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: `PrepEdge <${fromEmail}>`,
+      to: toEmails,
+      subject,
+      html
+    });
+
+    if (error) {
+      console.error('Error sending custom email:', error);
+      return { success: false, error };
+    }
+    
+    return { success: true, data };
+  } catch (error) {
+    console.error('Failed to send custom email:', error);
+    return { success: false, error };
+  }
+};
