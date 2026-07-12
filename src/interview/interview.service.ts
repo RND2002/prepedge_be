@@ -57,6 +57,14 @@ export const startInterview = async (userId: string, frontendConfig: FrontendInt
   const performance = await UserPerformance.findOne({ userId });
   const weakAreas = performance ? performance.persistentWeakAreas.map((wa: any) => wa.topic) : [];
 
+  // Count completed non-ritual interviews for difficulty ramp-up
+  // Ritual sessions are excluded — they are intentionally company-specific and not part of the learning curve
+  const completedInterviewsCount = await InterviewSession.countDocuments({
+    userId,
+    status: 'completed',
+    ritualRef: { $exists: false }
+  });
+
   // Check if user has an active ritual to pull company context
   const Ritual = mongoose.model('Ritual');
   const activeRitual = await Ritual.findOne({ user: userId, status: { $in: ['active', 'game_day'] } });
@@ -101,6 +109,7 @@ export const startInterview = async (userId: string, frontendConfig: FrontendInt
     companyTarget: activeRitual ? activeRitual.company : (onboarding.targetCompanies?.join(', ') || 'Product companies'),
     additionalSkills: onboarding.additionalSkills || [],
     userName,
+    completedInterviewsCount,
   };
 
   const session = await InterviewSession.create({
@@ -131,6 +140,7 @@ export const startInterview = async (userId: string, frontendConfig: FrontendInt
 };
 
 const generateQuestionsAsync = async (sessionId: mongoose.Types.ObjectId, aiConfig: any, weakAreas: any) => {
+  // aiConfig.completedInterviewsCount is forwarded automatically from startInterview
   try {
     let questionDocs;
 
@@ -260,6 +270,8 @@ export const startRitualInterview = async (userId: string, ritualId: string, day
     timerEnabled: ritualDay.type === 'light_warmup' ? false : true,
     timerMode: 'per_question' as const,
     answerMode: frontendConfig.answerMode || 'written',
+    // Ritual interviews always get real-interview difficulty — they are company-specific prep
+    completedInterviewsCount: 99,
   };
 
   const performance = await UserPerformance.findOne({ userId });
