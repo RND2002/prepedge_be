@@ -100,6 +100,7 @@ export interface IRitual extends Document {
   activatedAt?: Date;
   completedAt?: Date;
   abandonedAt?: Date;
+  expiredAt?: Date;
 }
 
 const RitualDaySchema = new Schema({
@@ -215,7 +216,8 @@ const RitualSchema = new Schema(
     lastReplannedAt: { type: Date },
     activatedAt: { type: Date },
     completedAt: { type: Date },
-    abandonedAt: { type: Date }
+    abandonedAt: { type: Date },
+    expiredAt: { type: Date },
   },
   { timestamps: true }
 );

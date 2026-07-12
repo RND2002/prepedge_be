@@ -201,5 +201,42 @@ export const startRitualCronJobs = () => {
     }
   }, { timezone: CRON_TIMEZONE });
 
+  // 8. Auto-Expire Rituals (10:00 AM daily)
+  // Any ritual whose interview date has passed and was never debriefed/completed
+  // gets marked as 'expired' so the user is free to start a fresh ritual.
+  // Grace period: we wait until 1 day AFTER the interview date before expiring,
+  // giving the user time to submit a debrief on the same day.
+  cron.schedule('0 10 * * *', async () => {
+    try {
+      const yesterday = addDays(startOfDay(new Date()), -1);
+
+      // Find all rituals that:
+      // - are past their interview date (interview was yesterday or earlier)
+      // - are still in an active/in-progress state (not completed, abandoned, expired, or failed)
+      const staleRituals = await Ritual.find({
+        status: { $in: ['active', 'game_day', 'scheduled', 'generating'] },
+        interviewDate: { $lt: yesterday }
+      });
+
+      if (staleRituals.length === 0) return;
+
+      const expiredIds = staleRituals.map(r => r._id);
+
+      await Ritual.updateMany(
+        { _id: { $in: expiredIds } },
+        {
+          $set: {
+            status: 'expired',
+            expiredAt: new Date(),
+          }
+        }
+      );
+
+      console.log(`[RITUAL CRON] Auto-expired ${staleRituals.length} ritual(s) past their interview date.`);
+    } catch (err) {
+      console.error('[RITUAL CRON] Error auto-expiring rituals:', err);
+    }
+  }, { timezone: CRON_TIMEZONE });
+
   console.log('[CRON] Prepedge Ritual cron jobs initialized.');
 };
