@@ -208,7 +208,7 @@ const generateQuestionsAsync = async (sessionId: mongoose.Types.ObjectId, aiConf
       subTopic: doc.subTopic,
       difficulty: doc.difficulty,
       sequenceNumber: idx + 1,
-      timerAllotted: doc.timer?.writtenSeconds || 180
+      timerAllotted: doc.timer?.writtenSeconds || 240
     }));
 
     await InterviewSession.findByIdAndUpdate(sessionId, {
@@ -360,7 +360,7 @@ const generateRitualQuestionsAsync = async (
       );
 
       questionDocs = await Promise.all(generatedQ.map((q: any) => {
-        const allottedSeconds = ritualDay.type === 'light_warmup' ? 0 : (q.timerAllotted || 180);
+        const allottedSeconds = ritualDay.type === 'light_warmup' ? 0 : (q.timerAllotted || 240);
         
         return Question.create({
           text: q.text,

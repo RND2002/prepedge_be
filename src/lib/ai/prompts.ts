@@ -125,7 +125,11 @@ Rules:
 2. If the user has known weak areas, dedicate at least 30-40% of the questions to test those areas.
 3. Mix up question types as instructed in the difficulty stage above.
 4. 'mustCover' should be 2-4 critical technical keywords or concepts required to pass.
-5. Provide realistic 'timerAllotted' (e.g., 60 for simple concept, 180 for complex scenario).
+5. Provide realistic 'timerAllotted' in SECONDS based on question complexity:
+   - Conceptual/definition questions (easy): 180s (3 minutes)
+   - Practical/scenario questions (medium): 240s (4 minutes)
+   - Hard, debug, DSA, or coding questions: 300s (5 minutes)
+   MINIMUM is 180s. Never go below 180s. Default to 240s when unsure.
 6. Keep question text and descriptions concise to save output tokens.
 7. Address the candidate by their name occasionally in the scenario descriptions to make it feel personal.
 8. ALWAYS include at least one DSA question as per the difficulty stage instructions above.`;

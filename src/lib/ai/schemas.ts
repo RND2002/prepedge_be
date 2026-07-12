@@ -6,7 +6,7 @@ export const QuestionGenerationSchema = z.object({
     topic: z.string().describe("The high-level topic, e.g., React Hooks, Node.js Event Loop"),
     subTopic: z.string().describe("The specific sub-topic, e.g., useEffect cleanup"),
     difficulty: z.enum(['conceptual', 'practical', 'scenario', 'debug', 'tradeoff']),
-    timerAllotted: z.number().describe("Time in seconds to answer. Between 60 and 300 depending on complexity."),
+    timerAllotted: z.number().min(180).max(300).describe("Time in seconds to answer. 180s (conceptual/easy), 240s (practical/scenario), 300s (hard/debug/DSA/coding). Minimum 180s."),
     mustCover: z.array(z.string()).describe("Non-negotiable concepts that must be mentioned in a passing answer"),
     idealAnswerFull: z.string().describe("What a perfect, deep answer looks like"),
     interviewerPerspective: z.string().describe("Why an interviewer asks this question and what they look for")
